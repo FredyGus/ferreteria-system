@@ -12,25 +12,33 @@ import javafx.stage.Stage;
 
 public class MainController {
 
-    @FXML private Menu menuAdmin, menuBodega, menuVentas, menuCaja;
-    @FXML private Label lblSesion;
-    @FXML private BorderPane content;
+    @FXML
+    private Menu menuAdmin, menuBodega, menuVentas, menuCaja, menuCatalogos;
+    @FXML
+    private Label lblSesion;
+    @FXML
+    private BorderPane content;
 
     @FXML
     public void initialize() {
-        var u = Session.get();
+        var u = com.ferre.config.Session.get();
         lblSesion.setText("Sesión: " + u.getUsuario() + " (" + u.getRol() + ")");
 
         // visibilidad por rol
-        menuAdmin.setVisible(u.getRol()== Rol.ADMIN);
-        menuBodega.setVisible(u.getRol()== Rol.BODEGA || u.getRol()== Rol.ADMIN);
-        menuVentas.setVisible(u.getRol()== Rol.VENTAS || u.getRol()== Rol.ADMIN);
-        menuCaja.setVisible(u.getRol()== Rol.CAJA   || u.getRol()== Rol.ADMIN);
+        menuAdmin.setVisible(u.getRol() == com.ferre.model.Rol.ADMIN);
+        menuCatalogos.setVisible(u.getRol() == com.ferre.model.Rol.ADMIN); // solo ADMIN edita catálogos
+        menuBodega.setVisible(u.getRol() == com.ferre.model.Rol.BODEGA || u.getRol() == com.ferre.model.Rol.ADMIN);
+        menuVentas.setVisible(u.getRol() == com.ferre.model.Rol.VENTAS || u.getRol() == com.ferre.model.Rol.ADMIN);
+        menuCaja.setVisible(u.getRol() == com.ferre.model.Rol.CAJA || u.getRol() == com.ferre.model.Rol.ADMIN);
     }
 
-    @FXML private void exitApp(){ System.exit(0); }
+    @FXML
+    private void exitApp() {
+        System.exit(0);
+    }
 
-    @FXML private void logout() {
+    @FXML
+    private void logout() {
         Session.clear();
         try {
             Stage stage = (Stage) lblSesion.getScene().getWindow();
@@ -38,10 +46,13 @@ public class MainController {
             stage.setScene(new javafx.scene.Scene(loader.load(), 480, 360));
             stage.setTitle("Ingreso — Ferretería");
             stage.setResizable(false);
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @FXML private void openUsuarios() {
+    @FXML
+    private void openUsuarios() {
         loadCenter("/fxml/users/UsersView.fxml");
     }
 
@@ -49,6 +60,23 @@ public class MainController {
         try {
             Node node = FXMLLoader.load(getClass().getResource(fxml));
             content.setCenter(node);
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    private void openProductos() {
+        loadCenter("/fxml/catalogos/ProductosView.fxml");
+    }
+
+    @FXML
+    private void openProveedores() {
+        loadCenter("/fxml/catalogos/ProveedoresView.fxml");
+    }
+
+    @FXML
+    private void openClientes() {
+        loadCenter("/fxml/catalogos/ClientesView.fxml");
     }
 }

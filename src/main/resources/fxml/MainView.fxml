@@ -16,22 +16,36 @@
                             <MenuItem text="Salir" onAction="#exitApp"/>
                         </items>
                     </Menu>
+
                     <Menu text="Administración" fx:id="menuAdmin">
                         <items>
                             <MenuItem text="Usuarios" onAction="#openUsuarios"/>
                         </items>
                     </Menu>
+
+                    <!-- NUEVO -->
+                    <Menu text="Catálogos" fx:id="menuCatalogos">
+                        <items>
+                            <MenuItem text="Productos" onAction="#openProductos"/>
+                            <MenuItem text="Proveedores" onAction="#openProveedores"/>
+                            <MenuItem text="Clientes" onAction="#openClientes"/>
+                        </items>
+                    </Menu>
+
                     <Menu text="Bodega" fx:id="menuBodega"/>
                     <Menu text="Ventas" fx:id="menuVentas"/>
                     <Menu text="Caja" fx:id="menuCaja"/>
                 </menus>
             </MenuBar>
+
             <HBox spacing="12" styleClass="topbar">
                 <children>
                     <Label text="Sistema de Facturación — Ferretería" styleClass="title"/>
                     <Label fx:id="lblSesion" styleClass="status"/>
                 </children>
-                <padding><Insets top="8" right="12" bottom="8" left="12"/></padding>
+                <padding>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
+                </padding>
             </HBox>
         </VBox>
     </top>
