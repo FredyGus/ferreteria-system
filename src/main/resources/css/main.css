@@ -1,0 +1,27 @@
+
+.root {
+  -fx-font-family: "Segoe UI", "Roboto", "Inter", sans-serif;
+  -fx-base: #f7f9fc;
+}
+
+.topbar {
+  -fx-background-color: linear-gradient(to right, #f0f4ff, #ffffff);
+  -fx-border-color: #e6eaf2;
+  -fx-border-width: 0 0 1 0;
+}
+
+.title {
+  -fx-font-size: 18px;
+  -fx-font-weight: 700;
+}
+
+.status {
+  -fx-font-size: 12px;
+  -fx-text-fill: #5a6a85;
+  -fx-padding: 4 0 0 16;
+}
+
+.button {
+  -fx-background-radius: 8px;
+  -fx-padding: 8 16 8 16;
+}
