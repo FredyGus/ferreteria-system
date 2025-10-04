@@ -1,29 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.ferre.controller.MainController">
     <top>
-        <HBox spacing="12" styleClass="topbar">
-            <children>
-                <Label text="Sistema de Facturación — Ferretería" styleClass="title"/>
-                <Label fx:id="statusLabel" text="Estado: —" styleClass="status"/>
-            </children>
-            <padding><Insets top="12" right="16" bottom="12" left="16"/></padding>
-        </HBox>
+        <VBox>
+            <MenuBar>
+                <menus>
+                    <Menu text="Sistema">
+                        <items>
+                            <MenuItem text="Cerrar sesión" onAction="#logout"/>
+                            <SeparatorMenuItem/>
+                            <MenuItem text="Salir" onAction="#exitApp"/>
+                        </items>
+                    </Menu>
+                    <Menu text="Administración" fx:id="menuAdmin">
+                        <items>
+                            <MenuItem text="Usuarios" onAction="#openUsuarios"/>
+                        </items>
+                    </Menu>
+                    <Menu text="Bodega" fx:id="menuBodega"/>
+                    <Menu text="Ventas" fx:id="menuVentas"/>
+                    <Menu text="Caja" fx:id="menuCaja"/>
+                </menus>
+            </MenuBar>
+            <HBox spacing="12" styleClass="topbar">
+                <children>
+                    <Label text="Sistema de Facturación — Ferretería" styleClass="title"/>
+                    <Label fx:id="lblSesion" styleClass="status"/>
+                </children>
+                <padding><Insets top="8" right="12" bottom="8" left="12"/></padding>
+            </HBox>
+        </VBox>
     </top>
 
     <center>
-        <HBox alignment="CENTER" spacing="16">
-            <children>
-                <Button text="Probar conexión" onAction="#testConnection"/>
-                <Button text="Salir" onAction="#exitApp"/>
-            </children>
-        </HBox>
+        <BorderPane fx:id="content" />
     </center>
 </BorderPane>

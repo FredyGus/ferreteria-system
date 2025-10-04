@@ -1,46 +1,54 @@
 package com.ferre.controller;
 
-import com.ferre.config.DataSourceFactory;
-import javafx.event.ActionEvent;
+import com.ferre.config.Session;
+import com.ferre.model.Rol;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-
-import java.sql.Connection;
+import javafx.scene.control.Menu;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
 public class MainController {
 
-    @FXML
-    private Label statusLabel;
+    @FXML private Menu menuAdmin, menuBodega, menuVentas, menuCaja;
+    @FXML private Label lblSesion;
+    @FXML private BorderPane content;
 
     @FXML
     public void initialize() {
-        statusLabel.setText("Estado: Listo");
+        var u = Session.get();
+        lblSesion.setText("Sesión: " + u.getUsuario() + " (" + u.getRol() + ")");
+
+        // visibilidad por rol
+        menuAdmin.setVisible(u.getRol()== Rol.ADMIN);
+        menuBodega.setVisible(u.getRol()== Rol.BODEGA || u.getRol()== Rol.ADMIN);
+        menuVentas.setVisible(u.getRol()== Rol.VENTAS || u.getRol()== Rol.ADMIN);
+        menuCaja.setVisible(u.getRol()== Rol.CAJA   || u.getRol()== Rol.ADMIN);
     }
 
-    @FXML
-    private void testConnection(ActionEvent e) {
-        try (Connection cn = DataSourceFactory.getConnection()) {
-            String db = cn.getMetaData().getDatabaseProductName() + " " + cn.getMetaData().getDatabaseProductVersion();
-            statusLabel.setText("Estado: Conectado a " + db);
-            alert(Alert.AlertType.INFORMATION, "Conexión OK", "Conectado a: " + db);
-        } catch (Exception ex) {
-            statusLabel.setText("Estado: SIN CONEXIÓN");
-            alert(Alert.AlertType.ERROR, "Error de conexión", ex.getMessage());
-        }
+    @FXML private void exitApp(){ System.exit(0); }
 
+    @FXML private void logout() {
+        Session.clear();
+        try {
+            Stage stage = (Stage) lblSesion.getScene().getWindow();
+            var loader = new FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
+            stage.setScene(new javafx.scene.Scene(loader.load(), 480, 360));
+            stage.setTitle("Ingreso — Ferretería");
+            stage.setResizable(false);
+        } catch (Exception e){ throw new RuntimeException(e); }
     }
 
-    @FXML
-    private void exitApp(ActionEvent e) {
-        System.exit(0);
+    @FXML private void openUsuarios() {
+        loadCenter("/fxml/users/UsersView.fxml");
     }
 
-    private void alert(Alert.AlertType type, String title, String msg) {
-        Alert a = new Alert(type);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+    private void loadCenter(String fxml) {
+        try {
+            Node node = FXMLLoader.load(getClass().getResource(fxml));
+            content.setCenter(node);
+        } catch (Exception e){ throw new RuntimeException(e); }
     }
 }

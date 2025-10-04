@@ -25,3 +25,7 @@
   -fx-background-radius: 8px;
   -fx-padding: 8 16 8 16;
 }
+
+.menu-bar { -fx-background-color: #ffffff; }
+.table-view { -fx-background-radius: 8px; }
+.table-view:row-selection .table-row-cell:selected { -fx-background-color: #DDEBFF; }
