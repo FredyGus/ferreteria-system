@@ -1,5 +1,20 @@
 # Sistema de Facturación – Ferretería (Proyecto Programación II)
 
+[![Java](https://img.shields.io/badge/_Java-22-red?logo=openjdk&logoColor=white)]()
+[![JavaFX](https://img.shields.io/badge/_JavaFX-UI-blue?logo=java&logoColor=white)]()
+[![SceneBuilder](https://img.shields.io/badge/_SceneBuilder-Design-purple)]()
+[![JDBC](https://img.shields.io/badge/_JDBC-Connector-0096D6)]()
+[![HikariCP](https://img.shields.io/badge/_HikariCP-Connection_Pool-green)]()
+[![JasperReports](https://img.shields.io/badge/_JasperReports-PDF-orange)]()
+[![MySQL](https://img.shields.io/badge/_MySQL-8.x-4479A1?logo=mysql&logoColor=white)]()
+[![XAMPP](https://img.shields.io/badge/_XAMPP-Server-FF6C37?logo=xampp&logoColor=white)]()
+[![Apache](https://img.shields.io/badge/_Apache-Server-red?logo=apache&logoColor=white)]()
+[![NetBeans](https://img.shields.io/badge/_NetBeans-IDE-blue?logo=apache-netbeans-ide&logoColor=white)]()
+[![Platform](https://img.shields.io/badge/️_Windows|Linux-lightgrey?logo=windows&logoColor=white)]()
+[![Status](https://img.shields.io/badge/_En_Desarrollo-yellow)]()
+[![Repo](https://img.shields.io/badge/_GitHub-FredyGus%2Fferreteria--system-black?logo=github)](https://github.com/FredyGus/ferreteria-system)
+
+
 **Ruta A (Escritorio nativo):** Java 22 · JavaFX · MySQL · JDBC/HikariCP · JasperReports  
 **IDE:** NetBeans · **BD:** MySQL Workbench · **Repo:** GitHub
 ---
