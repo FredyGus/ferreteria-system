@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ferre.controller.ProveedoresController">
+    <top>
+        <HBox spacing="10">
+            <children>
+                <Label text="Proveedores" styleClass="title"/>
+                <TextField fx:id="txtBuscar" promptText="Buscar por nombre o NIT" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblInfo" styleClass="status"/>
+            </children>
+            <padding><Insets top="8" right="12" bottom="8" left="12"/></padding>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tbl" prefHeight="360">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="220"/>
+                <TableColumn fx:id="colNit" text="NIT" prefWidth="120"/>
+                <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
+                <TableColumn fx:id="colEmail" text="Email" prefWidth="180"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <VBox spacing="8">
+            <Separator/>
+            <GridPane hgap="8" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <children>
+                    <Label text="Nombre:"/>
+                    <TextField fx:id="txtNombre" GridPane.columnIndex="1"/>
+
+                    <Label text="NIT:" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtNit" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="Teléfono:" GridPane.columnIndex="2"/>
+                    <TextField fx:id="txtTelefono" GridPane.columnIndex="3"/>
+
+                    <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <TextField fx:id="txtEmail" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                    <Label text="Dirección:" GridPane.rowIndex="2"/>
+                    <TextField fx:id="txtDireccion" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+                </children>
+            </GridPane>
+            <HBox spacing="8" alignment="CENTER_RIGHT">
+                <children>
+                    <Button text="Nuevo" onAction="#nuevo"/>
+                    <Button text="Guardar" onAction="#guardar" defaultButton="true"/>
+                    <Button text="Eliminar" onAction="#eliminar"/>
+                </children>
+                <padding><Insets right="12" bottom="12"/></padding>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>
