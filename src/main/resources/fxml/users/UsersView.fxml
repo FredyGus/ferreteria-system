@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ferre.controller.UsersController">
+    <top>
+        <HBox spacing="12">
+            <children>
+                <Label text="Usuarios" styleClass="title"/>
+                <Label fx:id="lblInfo" styleClass="status"/>
+            </children>
+            <padding><Insets top="8" right="12" bottom="8" left="12"/></padding>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tbl" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="140"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200"/>
+                <TableColumn fx:id="colRol" text="Rol" prefWidth="100"/>
+                <TableColumn fx:id="colEstado" text="Activo" prefWidth="80"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <VBox spacing="8">
+            <Separator/>
+            <GridPane hgap="8" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <children>
+                    <Label text="Usuario:" GridPane.rowIndex="0"/>
+                    <TextField fx:id="txtUsuario" promptText="usuario" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <Label text="Nombre:" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtNombre" promptText="nombre completo" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="Rol:" GridPane.rowIndex="2"/>
+                    <ComboBox fx:id="cmbRol" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="Contraseña:" GridPane.rowIndex="3"/>
+                    <PasswordField fx:id="txtPassword" promptText="solo al crear o reset" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                </children>
+            </GridPane>
+
+            <HBox spacing="8" alignment="CENTER_RIGHT">
+                <children>
+                    <Button text="Nuevo" onAction="#nuevo"/>
+                    <Button text="Guardar" onAction="#guardar" defaultButton="true"/>
+                    <Button text="Reset Password" onAction="#resetPassword"/>
+                    <Button text="Activar/Desactivar" onAction="#toggleEstado"/>
+                </children>
+                <padding><Insets right="12" bottom="12"/></padding>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

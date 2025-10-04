@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ferre.controller.LoginController">
+    <center>
+        <VBox alignment="CENTER" spacing="12">
+            <children>
+                <Label text="Sistema de Facturación — Ferretería" styleClass="title"/>
+                <GridPane hgap="8" vgap="8">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <children>
+                        <Label text="Usuario:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtUsuario" promptText="Ingrese usuario"
+                                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                        <Label text="Contraseña:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <PasswordField fx:id="txtPassword" promptText="Ingrese contraseña"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+                <Button text="Ingresar" onAction="#doLogin" defaultButton="true"/>
+                <Label fx:id="lblError" textFill="red"/>
+            </children>
+            <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+        </VBox>
+    </center>
+</BorderPane>
