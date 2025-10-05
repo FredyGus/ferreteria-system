@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ferre.controller.reportes.StockReportController" spacing="10">
+    <children>
+        <Label text="Inventario / Stock actual" styleClass="title"/>
+        <Button text="Ver inventario" onAction="#ver" defaultButton="true"/>
+    </children>
+    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+</VBox>

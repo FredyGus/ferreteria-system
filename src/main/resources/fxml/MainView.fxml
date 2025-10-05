@@ -46,6 +46,15 @@
                     </Menu>
 
                     <Menu text="Caja" fx:id="menuCaja"/>
+                    
+                    <Menu text="Reportes" fx:id="menuReportes">
+                        <items>
+                            <MenuItem text="Ventas por fecha" onAction="#openRptVentas"/>
+                            <MenuItem text="Inventario / Stock" onAction="#openRptStock"/>
+                            <MenuItem text="Kárdex por producto" onAction="#openRptKardex"/>
+                        </items>
+                    </Menu>
+
                 </menus>
             </MenuBar>
 

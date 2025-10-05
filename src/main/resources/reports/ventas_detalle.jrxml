@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="ventas_detalle" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+    <parameter name="P_FECHA_INI" class="java.util.Date"/>
+    <parameter name="P_FECHA_FIN" class="java.util.Date"/>
+    <parameter name="P_CLIENTE_ID" class="java.lang.Long"/>
+    <queryString>
+        <![CDATA[
+SELECT f.fecha,
+       cli.nombre AS cliente,
+       p.id       AS pedido_id,
+       prod.codigo,
+       prod.nombre AS producto,
+       d.cantidad,
+       d.precio_unit,
+       d.subtotal
+FROM factura f
+JOIN pedido p      ON p.id = f.pedido_id
+JOIN pedido_det d  ON d.pedido_id = p.id
+JOIN productos prod ON prod.id = d.producto_id
+JOIN clientes cli  ON cli.id = p.cliente_id
+WHERE f.fecha BETWEEN $P{P_FECHA_INI} AND $P{P_FECHA_FIN}
+  AND ( $P{P_CLIENTE_ID} IS NULL OR p.cliente_id = $P{P_CLIENTE_ID} )
+ORDER BY f.fecha, f.id, d.id
+        ]]>
+    </queryString>
+
+    <field name="fecha" class="java.sql.Timestamp"/>
+    <field name="cliente" class="java.lang.String"/>
+    <field name="pedido_id" class="java.lang.Long"/>
+    <field name="codigo" class="java.lang.String"/>
+    <field name="producto" class="java.lang.String"/>
+    <field name="cantidad" class="java.lang.Integer"/>
+    <field name="precio_unit" class="java.math.BigDecimal"/>
+    <field name="subtotal" class="java.math.BigDecimal"/>
+
+    <variable name="TOTAL" class="java.math.BigDecimal" calculation="Sum">
+        <variableExpression><![CDATA[$F{subtotal}]]></variableExpression>
+    </variable>
+
+    <title>
+        <band height="40">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="20"/>
+                <textElement textAlignment="Center" />
+                <textFieldExpression><![CDATA["VENTAS — DETALLE"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="20" width="555" height="20"/>
+                <textElement textAlignment="Center" />
+                <textFieldExpression><![CDATA["Del: " + new java.text.SimpleDateFormat("yyyy-MM-dd").format($P{P_FECHA_INI}) +
+"  Al: " + new java.text.SimpleDateFormat("yyyy-MM-dd").format($P{P_FECHA_FIN})]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="16">
+            <staticText><reportElement x="0" y="0" width="80" height="16"/><text><![CDATA[Fecha]]></text></staticText>
+            <staticText><reportElement x="80" y="0" width="120" height="16"/><text><![CDATA[Cliente]]></text></staticText>
+            <staticText><reportElement x="200" y="0" width="50" height="16"/><text><![CDATA[Ped]]></text></staticText>
+            <staticText><reportElement x="250" y="0" width="70" height="16"/><text><![CDATA[Código]]></text></staticText>
+            <staticText><reportElement x="320" y="0" width="120" height="16"/><text><![CDATA[Producto]]></text></staticText>
+            <staticText><reportElement x="440" y="0" width="35" height="16"/><text><![CDATA[Cant]]></text></staticText>
+            <staticText><reportElement x="475" y="0" width="40" height="16"/><text><![CDATA[Precio]]></text></staticText>
+            <staticText><reportElement x="515" y="0" width="40" height="16"/><text><![CDATA[Subt]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="16">
+            <textField><reportElement x="0" y="0" width="80" height="16"/><textFieldExpression><![CDATA[new java.text.SimpleDateFormat("yyyy-MM-dd").format($F{fecha})]]></textFieldExpression></textField>
+            <textField><reportElement x="80" y="0" width="120" height="16"/><textFieldExpression><![CDATA[$F{cliente}]]></textFieldExpression></textField>
+            <textField><reportElement x="200" y="0" width="50" height="16"/><textFieldExpression><![CDATA[$F{pedido_id}]]></textFieldExpression></textField>
+            <textField><reportElement x="250" y="0" width="70" height="16"/><textFieldExpression><![CDATA[$F{codigo}]]></textFieldExpression></textField>
+            <textField><reportElement x="320" y="0" width="120" height="16"/><textFieldExpression><![CDATA[$F{producto}]]></textFieldExpression></textField>
+            <textField><reportElement x="440" y="0" width="35" height="16"/><textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression></textField>
+            <textField><reportElement x="475" y="0" width="40" height="16"/><textFieldExpression><![CDATA[$F{precio_unit}]]></textFieldExpression></textField>
+            <textField><reportElement x="515" y="0" width="40" height="16"/><textFieldExpression><![CDATA[$F{subtotal}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+    <summary>
+        <band height="20">
+            <staticText><reportElement x="440" y="0" width="75" height="20"/><text><![CDATA[Total:]]></text></staticText>
+            <textField><reportElement x="515" y="0" width="40" height="20"/><textFieldExpression><![CDATA[$V{TOTAL}]]></textFieldExpression></textField>
+        </band>
+    </summary>
+</jasperReport>
