@@ -95,4 +95,19 @@ public class MainController {
         loadCenter("/fxml/ventas/FacturarView.fxml");
     }
 
+    @FXML
+    private void openRptVentas() {
+        loadCenter("/fxml/reportes/VentasReportView.fxml");
+    }
+
+    @FXML
+    private void openRptStock() {
+        loadCenter("/fxml/reportes/StockReportView.fxml");
+    }
+
+    @FXML
+    private void openRptKardex() {
+        loadCenter("/fxml/reportes/KardexReportView.fxml");
+    }
+
 }

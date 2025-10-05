@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ferre.controller.reportes.VentasReportController" spacing="10">
+    <children>
+        <Label text="Reporte de Ventas por Fecha" styleClass="title" />
+        <GridPane hgap="8" vgap="8">
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints halignment="RIGHT"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <children>
+                <Label text="Desde:" GridPane.rowIndex="0"/>
+                <DatePicker fx:id="dpDesde" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <Label text="Hasta:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <DatePicker fx:id="dpHasta" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="Cliente (opcional):" GridPane.rowIndex="1"/>
+                <ComboBox fx:id="cmbCliente" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+            </children>
+        </GridPane>
+
+        <HBox spacing="8">
+            <Button text="Ver DETALLE" onAction="#verDetalle" defaultButton="true"/>
+            <Button text="Ver RESUMEN" onAction="#verResumen"/>
+        </HBox>
+    </children>
+    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+</VBox>
