@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ferre.controller.FacturarController">
+    <top>
+        <VBox>
+            <HBox spacing="10">
+                <children>
+                    <Label text="Facturar Pedido" styleClass="title"/>
+                    <Label fx:id="lblTotal" styleClass="status"/>
+                </children>
+                <padding><Insets top="8" right="12" bottom="8" left="12"/></padding>
+            </HBox>
+
+            <GridPane hgap="8" vgap="8" style="-fx-padding: 0 12 8 12;">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <children>
+                    <Label text="Pedido:"/>
+                    <ComboBox fx:id="cmbPedido" GridPane.columnIndex="1"/>
+
+                    <Label text="Serie:" GridPane.columnIndex="2"/>
+                    <TextField fx:id="txtSerie" GridPane.columnIndex="3"/>
+
+                    <Label text="Número:" GridPane.columnIndex="4"/>
+                    <TextField fx:id="txtNumero" GridPane.columnIndex="5"/>
+
+                    <Label text="Forma de pago:" GridPane.rowIndex="1"/>
+                    <ComboBox fx:id="cmbFormaPago" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                </children>
+            </GridPane>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tbl" prefHeight="360" style="-fx-padding: 0 12 0 12;">
+            <columns>
+                <TableColumn fx:id="colCodigo" text="Código" prefWidth="120"/>
+                <TableColumn fx:id="colNombre" text="Producto" prefWidth="220"/>
+                <TableColumn fx:id="colCantidad" text="Cant." prefWidth="80"/>
+                <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100"/>
+                <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="8" style="-fx-padding: 0 12 12 12;">
+            <children>
+                <Button text="Refrescar pedidos" onAction="#refrescarPedidos"/>
+                <Button text="Facturar" onAction="#facturar" defaultButton="true"/>
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

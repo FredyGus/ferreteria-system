@@ -38,7 +38,13 @@
                         </items>
                     </Menu>
 
-                    <Menu text="Ventas" fx:id="menuVentas"/>
+                    <Menu text="Ventas" fx:id="menuVentas">
+                        <items>
+                            <MenuItem text="Nuevo Pedido" onAction="#openNuevoPedido"/>
+                            <MenuItem text="Facturar Pedido" onAction="#openFacturar"/>
+                        </items>
+                    </Menu>
+
                     <Menu text="Caja" fx:id="menuCaja"/>
                 </menus>
             </MenuBar>
