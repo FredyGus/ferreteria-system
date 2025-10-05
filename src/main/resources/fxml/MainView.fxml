@@ -32,7 +32,12 @@
                         </items>
                     </Menu>
 
-                    <Menu text="Bodega" fx:id="menuBodega"/>
+                    <Menu text="Bodega" fx:id="menuBodega">
+                        <items>
+                            <MenuItem text="Ingreso" onAction="#openIngreso"/>
+                        </items>
+                    </Menu>
+
                     <Menu text="Ventas" fx:id="menuVentas"/>
                     <Menu text="Caja" fx:id="menuCaja"/>
                 </menus>
