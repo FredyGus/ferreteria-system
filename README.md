@@ -72,12 +72,12 @@
 
 | Fase                          | Estado                                          | Última actualización | Tag          |
 | ----------------------------- | ----------------------------------------------- | -------------------- | ------------ |
-| F0 — Fundaciones              | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _04-10-2025_         | `v0-F0`      |
-| F1 — Modelo de datos y SQL    | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _04-10-2025_         | `v0-F1`      |
-| F2 — Usuarios y Acceso        | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _04-10-2025_         | `v0-F2`      |
-| F3 — Catálogos                | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _aaaa-mm-dd_         | `v0-F3`      |
-| F4 — Ingreso a Almacén        | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v0-F4`      |
-| F5 — Ventas: Pedido           | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v0-F5`      |
+| F0 — Fundaciones              | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-04_         | `v0-F0`      |
+| F1 — Modelo de datos y SQL    | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-04_         | `v0-F1`      |
+| F2 — Usuarios y Acceso        | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-04_         | `v0-F2`      |
+| F3 — Catálogos                | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-04_         | `v0-F3`      |
+| F4 — Ingreso a Almacén        | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-05_         | `v0-F4`      |
+| F5 — Ventas: Pedido           | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _aaaa-mm-dd_         | `v0-F5`      |
 | F6 — Caja: Pago & Factura     | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v0-F6`      |
 | F7 — Reportes PDF             | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v0-F7`      |
 | F8 — Endurecimiento & Entrega | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v1.0-final` |
@@ -192,16 +192,16 @@
 **Estado:**
 
 - [ ] No iniciada
-- [x] En proceso
-- [ ] Completada
+- [ ] En proceso
+- [x] Completada
 
 **Checklist de tareas**
 
-- [ ] Pantalla de **Ingresos** (encabezado: proveedor, fecha, no_doc)
-- [ ] **Detalle** de ítems (producto, cantidad, costo, subtotal)
-- [ ] **Transacción**: insertar encabezado + detalles
-- [ ] **Stock ↑** por cada ítem confirmado
-- [ ] Totales validados (cantidad>0, costo>0)
+- [x] Pantalla de **Ingresos** (encabezado: proveedor, fecha, no_doc)
+- [x] **Detalle** de ítems (producto, cantidad, costo, subtotal)
+- [x] **Transacción**: insertar encabezado + detalles
+- [x] **Stock ↑** por cada ítem confirmado
+- [x] Totales validados (cantidad>0, costo>0)
 
 **Criterios de aceptación (DoD)**
 
@@ -215,17 +215,17 @@
 
 **Estado:**
 
-- [x] No iniciada
+- [ ] No iniciada
 - [ ] En proceso
-- [ ] Completada
+- [x] Completada
 
 **Checklist de tareas**
 
-- [ ] Crear **Pedido** (cliente + ítems)
-- [ ] Cálculo de totales
-- [ ] Estado inicial `PENDIENTE`
-- [ ] Listado de pedidos **pendientes** para Caja
-- [ ] Edición antes de pagar
+- [x] Crear **Pedido** (cliente + ítems)
+- [x] Cálculo de totales
+- [x] Estado inicial `PENDIENTE`
+- [x] Listado de pedidos **pendientes** para Caja
+- [x] Edición antes de pagar
 
 **Criterios de aceptación (DoD)**
 
@@ -239,8 +239,8 @@
 
 **Estado:**
 
-- [x] No iniciada
-- [ ] En proceso
+- [ ] No iniciada
+- [x] En proceso
 - [ ] Completada
 
 **Checklist de tareas**

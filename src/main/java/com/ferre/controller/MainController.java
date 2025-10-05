@@ -85,4 +85,14 @@ public class MainController {
         loadCenter("/fxml/bodega/IngresoView.fxml");
     }
 
+    @FXML
+    private void openNuevoPedido() {
+        loadCenter("/fxml/ventas/NuevoPedidoView.fxml");
+    }
+
+    @FXML
+    private void openFacturar() {
+        loadCenter("/fxml/ventas/FacturarView.fxml");
+    }
+
 }
