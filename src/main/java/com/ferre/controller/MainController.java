@@ -79,4 +79,10 @@ public class MainController {
     private void openClientes() {
         loadCenter("/fxml/catalogos/ClientesView.fxml");
     }
+
+    @FXML
+    private void openIngreso() {
+        loadCenter("/fxml/bodega/IngresoView.fxml");
+    }
+
 }
