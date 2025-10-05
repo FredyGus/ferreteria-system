@@ -77,9 +77,9 @@
 | F2 — Usuarios y Acceso        | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-04_         | `v0-F2`      |
 | F3 — Catálogos                | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-04_         | `v0-F3`      |
 | F4 — Ingreso a Almacén        | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-05_         | `v0-F4`      |
-| F5 — Ventas: Pedido           | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _aaaa-mm-dd_         | `v0-F5`      |
-| F6 — Caja: Pago & Factura     | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v0-F6`      |
-| F7 — Reportes PDF             | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v0-F7`      |
+| F5 — Ventas: Pedido           | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-05_         | `v0-F5`      |
+| F6 — Caja: Pago & Factura     | ☐ No iniciada · ☐ En proceso · ☑ **Completada** | _2025-10-05_         | `v0-F6`      |
+| F7 — Reportes PDF             | ☐ No iniciada · ☑ En proceso · ☐ **Completada** | _2025-10-05_         | `v0-F7`      |
 | F8 — Endurecimiento & Entrega | ☑ No iniciada · ☐ En proceso · ☐ **Completada** | _aaaa-mm-dd_         | `v1.0-final` |
 
 ---
@@ -240,17 +240,17 @@
 **Estado:**
 
 - [ ] No iniciada
-- [x] En proceso
-- [ ] Completada
+- [ ] En proceso
+- [x] Completada
 
 **Checklist de tareas**
 
-- [ ] Buscar **Pedido PENDIENTE** en Caja
-- [ ] Verificar **stock firme** (justo antes de facturar)
-- [ ] Registrar **Pago(s)** (efectivo/tarjeta/cheque/otro)
-- [ ] Generar **Factura** (serie/número/total)
-- [ ] **Transacción**: pagos + factura + **stock ↓**
-- [ ] Cambiar estado de pedido a `PAGADO`
+- [x] Buscar **Pedido PENDIENTE** en Caja
+- [x] Verificar **stock firme** (justo antes de facturar)
+- [x] Registrar **Pago(s)** (efectivo/tarjeta/cheque/otro)
+- [x] Generar **Factura** (serie/número/total)
+- [x] **Transacción**: pagos + factura + **stock ↓**
+- [x] Cambiar estado de pedido a `PAGADO`
 
 **Criterios de aceptación (DoD)**
 
@@ -264,8 +264,8 @@
 
 **Estado:**
 
-- [x] No iniciada
-- [ ] En proceso
+- [ ] No iniciada
+- [x] En proceso
 - [ ] Completada
 
 **Checklist de tareas**
