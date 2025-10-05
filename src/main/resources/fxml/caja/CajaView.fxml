@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferre.controller.caja.CajaController"
+            prefWidth="980" prefHeight="620">
+    <top>
+        <HBox spacing="20" padding="10">
+            <children>
+                <Label text="Caja" style="-fx-font-size:18; -fx-font-weight:bold;"/>
+                <Label text="Estado:"/>
+                <Label fx:id="lblEstado" style="-fx-font-weight:bold;"/>
+                <Label text="Apertura:"/>
+                <Label fx:id="lblApertura"/>
+                <Label text="Inicial:"/>
+                <Label fx:id="lblInicial"/>
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="10" padding="10">
+            <children>
+
+                <!-- Panel Apertura -->
+                <TitledPane text="Apertura" expanded="true">
+                    <content>
+                        <HBox spacing="10" padding="10">
+                            <children>
+                                <Label text="Monto inicial:"/>
+                                <TextField fx:id="txtInicial" promptText="0.00" prefWidth="120"/>
+                                <TextField fx:id="txtObsApertura" promptText="Observaciones" prefWidth="360"/>
+                                <Button text="Abrir caja" onAction="#abrirCaja" fx:id="btnAbrir"/>
+                            </children>
+                        </HBox>
+                    </content>
+                </TitledPane>
+
+                <!-- Tabla de Movimientos -->
+                <TitledPane text="Movimientos" expanded="true">
+                    <content>
+                        <VBox spacing="6" padding="10">
+                            <children>
+                                <TableView fx:id="tbl" prefHeight="360">
+                                    <columns>
+                                        <TableColumn text="Fecha" prefWidth="160" fx:id="colFecha"/>
+                                        <TableColumn text="Tipo"  prefWidth="100" fx:id="colTipo"/>
+                                        <TableColumn text="Descripción" prefWidth="520" fx:id="colDesc"/>
+                                        <TableColumn text="Monto" prefWidth="120" fx:id="colMonto"/>
+                                    </columns>
+                                </TableView>
+                                <HBox spacing="10">
+                                    <children>
+                                        <Button text="Ingreso manual" onAction="#ingresoManual" fx:id="btnIngreso"/>
+                                        <Button text="Egreso manual"  onAction="#egresoManual" fx:id="btnEgreso"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </content>
+                </TitledPane>
+
+                <!-- Totales y Cierre -->
+                <TitledPane text="Cierre" expanded="true">
+                    <content>
+                        <HBox spacing="15" padding="10">
+                            <children>
+                                <Label text="Ingresos:"/><Label fx:id="lblIngresos"/>
+                                <Label text="Egresos:"/><Label fx:id="lblEgresos"/>
+                                <Label text="Saldo estimado:"/><Label fx:id="lblSaldo"/>
+                                <TextField fx:id="txtContado" promptText="Monto contado" prefWidth="140"/>
+                                <TextField fx:id="txtObsCierre" promptText="Obs. cierre" prefWidth="250"/>
+                                <Button text="Cerrar caja" onAction="#cerrarCaja" fx:id="btnCerrar"/>
+                            </children>
+                        </HBox>
+                    </content>
+                </TitledPane>
+
+            </children>
+        </VBox>
+    </center>
+</BorderPane>
