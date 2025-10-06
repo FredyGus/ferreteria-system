@@ -1,84 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.ferre.controller.caja.CajaController"
-            prefWidth="980" prefHeight="620">
-    <top>
-        <HBox spacing="20" padding="10">
+<VBox xmlns="http://javafx.com/javafx/22"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ferre.controller.caja.CajaController"
+      spacing="12">
+
+    <padding>
+        <Insets topRightBottomLeft="12.0"/>
+    </padding>
+
+    <children>
+
+        <Label text="Cobro de Factura" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <!-- Cabecera -->
+        <GridPane hgap="10" vgap="6">
+            <columnConstraints>
+                <ColumnConstraints minWidth="90" halignment="RIGHT"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints minWidth="90" halignment="RIGHT"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
             <children>
-                <Label text="Caja" style="-fx-font-size:18; -fx-font-weight:bold;"/>
-                <Label text="Estado:"/>
-                <Label fx:id="lblEstado" style="-fx-font-weight:bold;"/>
-                <Label text="Apertura:"/>
-                <Label fx:id="lblApertura"/>
-                <Label text="Inicial:"/>
-                <Label fx:id="lblInicial"/>
+                <Label text="Factura:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="lblFactura" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Cliente:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <Label fx:id="lblCliente" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="Vendedor:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="lblVendedor" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Fecha:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                <Label fx:id="lblFecha" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                <Label text="Total:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="lblTotal" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+            </children>
+        </GridPane>
+
+        <!-- Ingreso de pagos -->
+        <HBox spacing="10">
+            <children>
+                <ComboBox fx:id="cmbForma" promptText="Forma de pago" prefWidth="220"/>
+                <TextField fx:id="txtMonto" prefWidth="200" promptText="Monto (abono)"/>
+                <Button fx:id="btnAgregarPago" text="Agregar" onAction="#agregarPago"/>
             </children>
         </HBox>
-    </top>
 
-    <center>
-        <VBox spacing="10" padding="10">
+        <!-- Tabla de pagos -->
+        <TableView fx:id="tblPagos" prefHeight="220">
+            <columns>
+                <TableColumn fx:id="colForma" text="Forma" prefWidth="250"/>
+                <TableColumn fx:id="colMonto" text="Monto" prefWidth="160"/>
+            </columns>
+        </TableView>
+
+        <!-- Totales y acción -->
+        <HBox spacing="20" alignment="CENTER_RIGHT">
             <children>
+                <Label text="Pagado:"/>
+                <Label fx:id="lblPagado" style="-fx-font-weight: bold;"/>
 
-                <!-- Panel Apertura -->
-                <TitledPane text="Apertura" expanded="true">
-                    <content>
-                        <HBox spacing="10" padding="10">
-                            <children>
-                                <Label text="Monto inicial:"/>
-                                <TextField fx:id="txtInicial" promptText="0.00" prefWidth="120"/>
-                                <TextField fx:id="txtObsApertura" promptText="Observaciones" prefWidth="360"/>
-                                <Button text="Abrir caja" onAction="#abrirCaja" fx:id="btnAbrir"/>
-                            </children>
-                        </HBox>
-                    </content>
-                </TitledPane>
+                <Label text="Saldo:"/>
+                <Label fx:id="lblSaldo" style="-fx-font-weight: bold;"/>
 
-                <!-- Tabla de Movimientos -->
-                <TitledPane text="Movimientos" expanded="true">
-                    <content>
-                        <VBox spacing="6" padding="10">
-                            <children>
-                                <TableView fx:id="tbl" prefHeight="360">
-                                    <columns>
-                                        <TableColumn text="Fecha" prefWidth="160" fx:id="colFecha"/>
-                                        <TableColumn text="Tipo"  prefWidth="100" fx:id="colTipo"/>
-                                        <TableColumn text="Descripción" prefWidth="520" fx:id="colDesc"/>
-                                        <TableColumn text="Monto" prefWidth="120" fx:id="colMonto"/>
-                                    </columns>
-                                </TableView>
-                                <HBox spacing="10">
-                                    <children>
-                                        <Button text="Ingreso manual" onAction="#ingresoManual" fx:id="btnIngreso"/>
-                                        <Button text="Egreso manual"  onAction="#egresoManual" fx:id="btnEgreso"/>
-                                    </children>
-                                </HBox>
-                            </children>
-                        </VBox>
-                    </content>
-                </TitledPane>
-
-                <!-- Totales y Cierre -->
-                <TitledPane text="Cierre" expanded="true">
-                    <content>
-                        <HBox spacing="15" padding="10">
-                            <children>
-                                <Label text="Ingresos:"/><Label fx:id="lblIngresos"/>
-                                <Label text="Egresos:"/><Label fx:id="lblEgresos"/>
-                                <Label text="Saldo estimado:"/><Label fx:id="lblSaldo"/>
-                                <TextField fx:id="txtContado" promptText="Monto contado" prefWidth="140"/>
-                                <TextField fx:id="txtObsCierre" promptText="Obs. cierre" prefWidth="250"/>
-                                <Button text="Cerrar caja" onAction="#cerrarCaja" fx:id="btnCerrar"/>
-                            </children>
-                        </HBox>
-                    </content>
-                </TitledPane>
-
+                <Button fx:id="btnCobrar" text="Registrar pagos" onAction="#cobrar"/>
             </children>
-        </VBox>
-    </center>
-</BorderPane>
+        </HBox>
+
+    </children>
+</VBox>

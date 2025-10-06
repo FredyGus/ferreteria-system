@@ -45,7 +45,12 @@
                         </items>
                     </Menu>
 
-                    <Menu text="Caja" fx:id="menuCaja"/>
+                    <Menu text="Caja" fx:id="menuCaja">
+                        <items>
+                            <MenuItem text="Caja" onAction="#openCaja"/>
+                        </items>
+                    </Menu>
+
                     
                     <Menu text="Reportes" fx:id="menuReportes">
                         <items>

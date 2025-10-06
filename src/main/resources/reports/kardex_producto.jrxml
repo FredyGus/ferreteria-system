@@ -11,32 +11,86 @@
     <parameter name="P_FECHA_INI"   class="java.util.Date"/>
     <parameter name="P_FECHA_FIN"   class="java.util.Date"/>
 
+    <!--
+      NOTA CLAVE:
+      - En las condiciones se usa DATE(columna) para agrupar por día aunque la columna sea DATETIME.
+      - El SALDO INICIAL se calcula con movimientos ANTERIORES al día 'desde'
+        y se inserta como una fila "SALDO INICIAL" sumando al acumulado.
+    -->
     <queryString>
         <![CDATA[
-SELECT x.fecha, x.tipo, x.codigo, x.producto, x.cant_in, x.cant_out
+SELECT t.fecha,
+       t.tipo,
+       t.codigo,
+       t.producto,
+       t.cant_in,
+       t.cant_out
 FROM (
-    -- Ingresos (tabla ingreso.fecha es DATE)
-    SELECT i.fecha AS fecha, 'INGRESO' AS tipo, prod.codigo, prod.nombre AS producto,
-           det.cantidad AS cant_in, 0 AS cant_out
-    FROM ingreso i
-    JOIN ingreso_det det ON det.ingreso_id = i.id
-    JOIN productos prod   ON prod.id = det.producto_id
-    WHERE det.producto_id = $P{P_PRODUCTO_ID}
-      AND i.fecha BETWEEN $P{P_FECHA_INI} AND $P{P_FECHA_FIN}
+    /* --------- SALDO INICIAL (antes de P_FECHA_INI) --------- */
+    SELECT
+        $P{P_FECHA_INI}     AS fecha,
+        'SALDO INICIAL'     AS tipo,
+        p.codigo            AS codigo,
+        p.nombre            AS producto,
+        /* cant_in lleva el saldo para que el acumulado arranque correctamente */
+        (
+          /* ingresos antes del día 'desde' */
+          (SELECT COALESCE(SUM(idet.cantidad),0)
+             FROM ingreso i
+             JOIN ingreso_det idet ON idet.ingreso_id = i.id
+            WHERE idet.producto_id = $P{P_PRODUCTO_ID}
+              AND DATE(i.fecha)   < DATE($P{P_FECHA_INI})
+          )
+          -
+          /* ventas antes del día 'desde' */
+          (SELECT COALESCE(SUM(pdet.cantidad),0)
+             FROM factura f
+             JOIN pedido      ped  ON ped.id = f.pedido_id
+             JOIN pedido_det  pdet ON pdet.pedido_id = ped.id
+            WHERE pdet.producto_id = $P{P_PRODUCTO_ID}
+              AND DATE(f.fecha)    < DATE($P{P_FECHA_INI})
+          )
+        ) AS cant_in,
+        0 AS cant_out
+    FROM productos p
+    WHERE p.id = $P{P_PRODUCTO_ID}
 
     UNION ALL
 
-    -- Ventas (factura.fecha es DATE)
-    SELECT f.fecha AS fecha, 'VENTA' AS tipo, prod.codigo, prod.nombre AS producto,
-           0 AS cant_in, d.cantidad AS cant_out
+    /* ---------------- Movimientos dentro del rango ---------------- */
+
+    /* Ingresos del día/rango (si tu columna es DATETIME, usar DATE(i.fecha)) */
+    SELECT
+        DATE(i.fecha)         AS fecha,
+        'INGRESO'             AS tipo,
+        p.codigo              AS codigo,
+        p.nombre              AS producto,
+        idet.cantidad         AS cant_in,
+        0                     AS cant_out
+    FROM ingreso i
+    JOIN ingreso_det idet ON idet.ingreso_id = i.id
+    JOIN productos   p    ON p.id = idet.producto_id
+    WHERE idet.producto_id = $P{P_PRODUCTO_ID}
+      AND DATE(i.fecha) BETWEEN DATE($P{P_FECHA_INI}) AND DATE($P{P_FECHA_FIN})
+
+    UNION ALL
+
+    /* Ventas del día/rango */
+    SELECT
+        DATE(f.fecha)         AS fecha,
+        'VENTA'               AS tipo,
+        p.codigo              AS codigo,
+        p.nombre              AS producto,
+        0                     AS cant_in,
+        pdet.cantidad         AS cant_out
     FROM factura f
-    JOIN pedido      p ON p.id = f.pedido_id
-    JOIN pedido_det  d ON d.pedido_id = p.id
-    JOIN productos prod ON prod.id = d.producto_id
-    WHERE d.producto_id = $P{P_PRODUCTO_ID}
-      AND f.fecha BETWEEN $P{P_FECHA_INI} AND $P{P_FECHA_FIN}
-) x
-ORDER BY x.fecha
+    JOIN pedido      ped  ON ped.id = f.pedido_id
+    JOIN pedido_det  pdet ON pdet.pedido_id = ped.id
+    JOIN productos   p    ON p.id = pdet.producto_id
+    WHERE pdet.producto_id = $P{P_PRODUCTO_ID}
+      AND DATE(f.fecha) BETWEEN DATE($P{P_FECHA_INI}) AND DATE($P{P_FECHA_FIN})
+) t
+ORDER BY t.fecha, t.tipo
         ]]>
     </queryString>
 
@@ -48,7 +102,7 @@ ORDER BY x.fecha
     <field name="cant_in"  class="java.lang.Integer"/>
     <field name="cant_out" class="java.lang.Integer"/>
 
-    <!-- Variables acumuladas -->
+    <!-- Variables acumuladas (balance = ingresos - salidas, incluyendo el saldo inicial) -->
     <variable name="SUM_IN" class="java.lang.Integer" calculation="Sum">
         <variableExpression><![CDATA[$F{cant_in} == null ? 0 : $F{cant_in}]]></variableExpression>
     </variable>
@@ -82,11 +136,11 @@ ORDER BY x.fecha
     <columnHeader>
         <band height="16">
             <staticText><reportElement x="0"   y="0" width="90"  height="16"/><text><![CDATA[Fecha]]></text></staticText>
-            <staticText><reportElement x="90"  y="0" width="80"  height="16"/><text><![CDATA[Tipo]]></text></staticText>
-            <staticText><reportElement x="170" y="0" width="140" height="16"/><text><![CDATA[Producto]]></text></staticText>
-            <staticText><reportElement x="310" y="0" width="70"  height="16"/><text><![CDATA[Ingreso]]></text></staticText>
-            <staticText><reportElement x="380" y="0" width="70"  height="16"/><text><![CDATA[Salida]]></text></staticText>
-            <staticText><reportElement x="450" y="0" width="105" height="16"/><text><![CDATA[Balance]]></text></staticText>
+            <staticText><reportElement x="90"  y="0" width="100" height="16"/><text><![CDATA[Tipo]]></text></staticText>
+            <staticText><reportElement x="190" y="0" width="140" height="16"/><text><![CDATA[Producto]]></text></staticText>
+            <staticText><reportElement x="330" y="0" width="70"  height="16"/><text><![CDATA[Ingreso]]></text></staticText>
+            <staticText><reportElement x="400" y="0" width="70"  height="16"/><text><![CDATA[Salida]]></text></staticText>
+            <staticText><reportElement x="470" y="0" width="85"  height="16"/><text><![CDATA[Balance]]></text></staticText>
         </band>
     </columnHeader>
 
@@ -98,19 +152,19 @@ ORDER BY x.fecha
 new java.text.SimpleDateFormat("yyyy-MM-dd").format($F{fecha})
                 ]]></textFieldExpression>
             </textField>
-            <textField><reportElement x="90" y="0" width="80" height="16"/>
+            <textField><reportElement x="90"  y="0" width="100" height="16"/>
                 <textFieldExpression><![CDATA[$F{tipo}]]></textFieldExpression>
             </textField>
-            <textField><reportElement x="170" y="0" width="140" height="16"/>
+            <textField><reportElement x="190" y="0" width="140" height="16"/>
                 <textFieldExpression><![CDATA[$F{codigo} + " - " + $F{producto}]]></textFieldExpression>
             </textField>
-            <textField><reportElement x="310" y="0" width="70" height="16"/>
+            <textField><reportElement x="330" y="0" width="70" height="16"/>
                 <textFieldExpression><![CDATA[$F{cant_in}]]></textFieldExpression>
             </textField>
-            <textField><reportElement x="380" y="0" width="70" height="16"/>
+            <textField><reportElement x="400" y="0" width="70" height="16"/>
                 <textFieldExpression><![CDATA[$F{cant_out}]]></textFieldExpression>
             </textField>
-            <textField><reportElement x="450" y="0" width="105" height="16"/>
+            <textField><reportElement x="470" y="0" width="85" height="16"/>
                 <textFieldExpression><![CDATA[$V{BALANCE}]]></textFieldExpression>
             </textField>
         </band>

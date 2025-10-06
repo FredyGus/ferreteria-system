@@ -1,60 +1,58 @@
 package com.ferre.controller.caja;
 
-import com.ferre.model.Rol;
-import com.ferre.model.Usuario;
-
 import com.ferre.config.Session;
+import com.ferre.model.Cliente;
 import com.ferre.model.Factura;
 import com.ferre.model.FormaPago;
 import com.ferre.model.Pago;
+import com.ferre.model.Pedido;
+import com.ferre.model.Usuario;
+import com.ferre.service.ClienteService;
+import com.ferre.service.FacturaService;
 import com.ferre.service.FormaPagoService;
 import com.ferre.service.PagoService;
+import com.ferre.service.PedidoService;
+import com.ferre.service.UsuarioService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.ComboBox;
-import javafx.util.StringConverter;   // ← ESTE es el que falta
-
+import javafx.util.StringConverter;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Locale;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CajaController {
 
-    // --- Cabecera
+    // Cabecera
     @FXML
     private Label lblFactura;
     @FXML
-    private Label lblCliente;     // si tu Factura no trae el nombre, lo dejamos vacío
+    private Label lblCliente;
     @FXML
-    private Label lblVendedor;    // igual que arriba
+    private Label lblVendedor;
     @FXML
     private Label lblFecha;
     @FXML
     private Label lblTotal;
-
-    // --- Totales dinámicos
     @FXML
     private Label lblPagado;
     @FXML
     private Label lblSaldo;
 
-    // --- Entrada de pagos
+    // Entrada
     @FXML
     private ComboBox<FormaPago> cmbForma;
     @FXML
     private TextField txtMonto;
-    @FXML
-    private Button btnAgregar;
-    @FXML
-    private Button btnQuitar;
 
-    // --- Tabla de pagos en sesión
+    // Tabla
     @FXML
     private TableView<Pago> tblPagos;
     @FXML
@@ -62,37 +60,40 @@ public class CajaController {
     @FXML
     private TableColumn<Pago, String> colMonto;
 
-    // --- Acción final
-    @FXML
-    private Button btnCobrar;
-
     // Estado
-    private Factura facturaActual;
     private final ObservableList<Pago> pagosSesion = FXCollections.observableArrayList();
+    private Factura facturaActual;
 
     // Servicios
-    private final PagoService pagoSrv = new PagoService();
     private final FormaPagoService formaSrv = new FormaPagoService();
+    private final PagoService pagoSrv = new PagoService();
+    private final FacturaService facturaSrv = new FacturaService();
+    private final PedidoService pedidoSrv = new PedidoService();
+    private final ClienteService clienteSrv = new ClienteService();
+    private final UsuarioService usuarioSrv = new UsuarioService();
 
-    // Formato
+    // Utilidades
     private final NumberFormat money = NumberFormat.getCurrencyInstance(new Locale("es", "GT"));
-    private final DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private Map<Long, String> formaNombreById = new HashMap<>();
 
     @FXML
     public void initialize() {
-        // Seguridad básica (ADMIN o CAJA)
-        Usuario u = Session.get();
-        if (u == null || !(u.getRol() == Rol.ADMIN || u.getRol() == Rol.CAJA)) {
+        // Seguridad básica
+        if (Session.get() == null) {
             new Alert(Alert.AlertType.WARNING,
-                    "No tienes permisos para acceder a Caja (requiere rol ADMIN o CAJA).",
+                    "No hay usuario en sesión. Vuelve a iniciar sesión para usar Caja.",
                     ButtonType.OK).showAndWait();
-            deshabilitarTodo(); // tu método que bloquea la pantalla
+            deshabilitarTodo();
             return;
         }
 
-        // Combos y tabla
-        cmbForma.setItems(FXCollections.observableArrayList(formaSrv.listar()));
-        cmbForma.setConverter(new StringConverter<FormaPago>() {
+        // Combos
+        var formas = FXCollections.observableArrayList(formaSrv.listar());
+        formaNombreById = formas.stream()
+                .collect(Collectors.toMap(FormaPago::getId, FormaPago::getNombre));
+        cmbForma.setItems(formas);
+        cmbForma.setConverter(new StringConverter<>() {
             @Override
             public String toString(FormaPago fp) {
                 return fp == null ? "" : fp.getNombre();
@@ -104,35 +105,48 @@ public class CajaController {
             }
         });
 
+        // Solo números/decimal en monto
+        txtMonto.textProperty().addListener((obs, oldV, newV) -> {
+            if (newV == null) {
+                return;
+            }
+            String clean = newV.replace(",", ".")
+                    .replaceAll("[^0-9.]", "");
+            // máximo un punto
+            int first = clean.indexOf('.');
+            if (first >= 0) {
+                int next = clean.indexOf('.', first + 1);
+                if (next > 0) {
+                    clean = clean.substring(0, next);
+                }
+            }
+            if (!clean.equals(newV)) {
+                txtMonto.setText(clean);
+            }
+        });
+
+        // Tabla
         tblPagos.setItems(pagosSesion);
-        colForma.setCellValueFactory(data
-                -> new SimpleStringProperty(data.getValue().getFormaPago() == null
-                        ? "" : data.getValue().getFormaPago().getNombre()));
-        colMonto.setCellValueFactory(data
-                -> new SimpleStringProperty(money.format(nvl(data.getValue().getMonto()))));
+        colForma.setCellValueFactory(cd -> {
+            // >>> Ajusta aquí si tu getter se llama distinto:
+            long formaId = cd.getValue().getFormaPagoId();
+            String nombre = formaNombreById.getOrDefault(formaId, String.valueOf(formaId));
+            return new SimpleStringProperty(nombre);
+        });
+        colMonto.setCellValueFactory(cd
+                -> new SimpleStringProperty(money.format(cd.getValue().getMonto())));
 
-        // Botones
-        btnAgregar.setOnAction(e -> onAgregar());
-        btnQuitar.setOnAction(e -> onQuitar());
-        btnCobrar.setOnAction(e -> onCobrar());
+        refrescarTotales(); // valores en blanco inicialmente
     }
 
-    private void deshabilitarTodo() {
-        cmbForma.setDisable(true);
-        txtMonto.setDisable(true);
-        btnAgregar.setDisable(true);
-        btnQuitar.setDisable(true);
-        btnCobrar.setDisable(true);
-    }
+    public void setFactura(com.ferre.model.Factura f) {
+        // Traemos la factura completa por id
+        this.facturaActual = facturaSrv.findById(f.getId());
 
-    /**
-     * Inyecta la factura a cobrar (desde la pantalla que abre Caja).
-     */
-    public void setFactura(Factura f) {
-        this.facturaActual = f;         // usamos la que viene; evitamos dependencias extra
+        // Limpiamos pagos en memoria y refrescamos la UI
         pagosSesion.clear();
-        pintarCabecera();
-        refrescarTotales();
+        pintarCabecera();   // debe llenar lblFactura, lblCliente, lblVendedor, lblFecha, lblTotal
+        refrescarTotales(); // debe recalcular Pagado/Saldo con lo de BD (0 si aún no hay pagos)
     }
 
     private void pintarCabecera() {
@@ -140,149 +154,139 @@ public class CajaController {
             return;
         }
 
-        String folio = (safe(facturaActual.getSerie()) + "-" + safe(facturaActual.getNumero())).replaceAll("^-|-$", "");
-        lblFactura.setText(folio.isBlank() ? ("#" + facturaActual.getId()) : folio);
+        lblFactura.setText(facturaActual.getSerie() + "-" + facturaActual.getNumero());
 
-        // Si tu modelo no trae nombres anidados, dejamos vacío (no rompe nada)
-        lblCliente.setText("");
-        lblVendedor.setText("");
+        // Pedido -> cliente y vendedor
+        Pedido ped = pedidoSrv.findById(facturaActual.getPedidoId()); // Ajusta si tu service se llama distinto
+        if (ped != null) {
+            Cliente cli = clienteSrv.findById(ped.getClienteId());
+            Usuario ven = usuarioSrv.findById(ped.getVendedorId());
+            lblCliente.setText(cli != null ? cli.getNombre() : "-");
+            lblVendedor.setText(ven != null ? ven.getNombre() : "-");
+        } else {
+            lblCliente.setText("-");
+            lblVendedor.setText("-");
+        }
 
         lblFecha.setText(facturaActual.getFecha() == null
-                ? "" : df.format(facturaActual.getFecha()));
-
+                ? "-"
+                : dtf.format(facturaActual.getFecha()));
         lblTotal.setText(money.format(nvl(facturaActual.getTotal())));
     }
 
-    private void refrescarTotales() {
-        if (facturaActual == null) {
-            return;
-        }
-
-        BigDecimal pagadoDb = pagoSrv.totalPagadoPorFactura(facturaActual.getId());
-        BigDecimal pagadoSesion = pagosSesion.stream()
-                .map(p -> nvl(p.getMonto()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal total = nvl(facturaActual.getTotal());
-        BigDecimal pagado = pagadoDb.add(pagadoSesion);
-        BigDecimal saldo = total.subtract(pagado);
-
-        lblPagado.setText(money.format(pagado.max(BigDecimal.ZERO)));
-        lblSaldo.setText(money.format(saldo.max(BigDecimal.ZERO)));
-    }
-
-    // =============== Acciones de UI ===============
-    private void onAgregar() {
-        if (facturaActual == null) {
-            return;
-        }
-
-        FormaPago fp = cmbForma.getValue();
+    @FXML
+    private void agregarPago() {
+        var fp = cmbForma.getValue();
+        var monto = toBig(txtMonto.getText());
         if (fp == null) {
-            alertWarn("Selecciona la forma de pago.");
+            alert(Alert.AlertType.WARNING, "Selecciona una forma de pago.");
             return;
         }
-
-        BigDecimal monto = toBig(txtMonto.getText());
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            alertWarn("Ingresa un monto válido mayor que cero.");
+            alert(Alert.AlertType.WARNING, "Ingresa un monto válido mayor a 0.");
             return;
         }
-
-        BigDecimal saldoActual = getSaldoActual();
-        if (monto.compareTo(saldoActual) > 0) {
-            alertWarn("El monto excede el saldo actual (" + money.format(saldoActual) + ").");
-            return;
-        }
-
-        Pago p = new Pago();
-        p.setFormaPago(fp);
+        var p = new Pago();
+        // >>> Ajusta esta línea si tu modelo usa otro nombre de setter:
+        p.setFormaPagoId(fp.getId());
         p.setMonto(monto);
         pagosSesion.add(p);
-
         txtMonto.clear();
-        cmbForma.getSelectionModel().clearSelection();
         refrescarTotales();
     }
 
-    private void onQuitar() {
-        Pago sel = tblPagos.getSelectionModel().getSelectedItem();
+    @FXML
+    private void quitarPago() {
+        var sel = tblPagos.getSelectionModel().getSelectedItem();
         if (sel != null) {
             pagosSesion.remove(sel);
             refrescarTotales();
         }
     }
 
-    private void onCobrar() {
+    @FXML
+    private void cobrar() {
         if (facturaActual == null) {
             return;
         }
-        if (pagosSesion.isEmpty()) {
-            alertWarn("Agrega al menos un pago.");
+
+        BigDecimal totalSesion = pagosSesion.stream()
+                .map(Pago::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalSesion.compareTo(BigDecimal.ZERO) <= 0) {
+            alert(Alert.AlertType.WARNING, "No hay pagos en la lista.");
             return;
         }
 
-        BigDecimal totalPagos = pagosSesion.stream()
-                .map(p -> nvl(p.getMonto()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        Optional<ButtonType> ok = new Alert(Alert.AlertType.CONFIRMATION,
-                "Se registrarán " + pagosSesion.size() + " pago(s) por " + money.format(totalPagos) + ". ¿Continuar?",
+        var ok = new Alert(Alert.AlertType.CONFIRMATION,
+                "Se registrarán " + pagosSesion.size() + " pago(s) por " + money.format(totalSesion) + ". ¿Continuar?",
                 ButtonType.OK, ButtonType.CANCEL).showAndWait();
 
         if (ok.isEmpty() || ok.get() == ButtonType.CANCEL) {
             return;
         }
 
-        // Persistimos pagos
+        // Persistir cada pago
         for (Pago p : pagosSesion) {
-            pagoSrv.registrar(facturaActual.getId(),
-                    p.getFormaPago().getId(),
-                    nvl(p.getMonto()),
-                    Session.get() == null ? null : Session.get().getId());
+            // >>> Ajusta getFormaPagoId() si tu getter tiene otro nombre
+            pagoSrv.registrar(facturaActual.getId(), p.getFormaPagoId(), p.getMonto());
         }
-
-        pagosSesion.clear();
-        refrescarTotales();
 
         new Alert(Alert.AlertType.INFORMATION, "Pagos registrados con éxito.").showAndWait();
-        // Si quieres marcar pagada cuando saldo = 0, puedes hacerlo aquí
-        // (depende de cómo lo manejes en tu FacturaService/DAO).
+        pagosSesion.clear();
+        refrescarTotales();
+        // puedes recargar cabecera si cambió estado/saldo en BD
     }
 
-    // =============== Utiles ===============
-    private BigDecimal getSaldoActual() {
-        BigDecimal pagadoDb = pagoSrv.totalPagadoPorFactura(facturaActual.getId());
-        BigDecimal pagadoSesion = pagosSesion.stream()
-                .map(p -> nvl(p.getMonto()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return nvl(facturaActual.getTotal()).subtract(pagadoDb).subtract(pagadoSesion).max(BigDecimal.ZERO);
-    }
-
-    private static BigDecimal nvl(BigDecimal b) {
-        return b == null ? BigDecimal.ZERO : b;
-    }
-
-    private static BigDecimal toBig(String s) {
-        if (s == null) {
-            return BigDecimal.ZERO;
+    // ======================
+    // Utilidades de pantalla
+    // ======================
+    private void refrescarTotales() {
+        if (facturaActual == null) {
+            lblPagado.setText(money.format(0));
+            lblSaldo.setText(money.format(0));
+            return;
         }
-        String t = s.trim().replace(",", "");
-        if (t.isEmpty()) {
+        BigDecimal pagadoDb = pagoSrv.totalPagadoPorFactura(facturaActual.getId()); // 0 si no hay
+        BigDecimal pagadoSesion = pagosSesion.stream()
+                .map(Pago::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = nvl(facturaActual.getTotal());
+        BigDecimal saldo = total.subtract(pagadoDb).subtract(pagadoSesion);
+
+        lblPagado.setText(money.format(pagadoDb.add(pagadoSesion)));
+        lblSaldo.setText(money.format(saldo.max(BigDecimal.ZERO)));
+    }
+
+    private void deshabilitarTodo() {
+        if (cmbForma != null) {
+            cmbForma.setDisable(true);
+        }
+        if (txtMonto != null) {
+            txtMonto.setDisable(true);
+        }
+        if (tblPagos != null) {
+            tblPagos.setDisable(true);
+        }
+    }
+
+    private BigDecimal nvl(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
+    private BigDecimal toBig(String s) {
+        if (s == null || s.isBlank()) {
             return BigDecimal.ZERO;
         }
         try {
-            return new BigDecimal(t);
+            return new BigDecimal(s.replace(",", ".").trim());
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }
     }
 
-    private static void alertWarn(String msg) {
-        new Alert(Alert.AlertType.WARNING, msg, ButtonType.OK).showAndWait();
-    }
-
-    private static String safe(String s) {
-        return s == null ? "" : s;
+    private void alert(Alert.AlertType t, String msg) {
+        new Alert(t, msg, ButtonType.OK).showAndWait();
     }
 }

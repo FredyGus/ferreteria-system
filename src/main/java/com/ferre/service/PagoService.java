@@ -9,23 +9,22 @@ import java.sql.ResultSet;
 
 public class PagoService {
 
-    /** Suma los pagos existentes en BD para una factura. */
+    /** Total ya pagado (en BD) para una factura. */
     public BigDecimal totalPagadoPorFactura(long facturaId) {
-        String sql = "SELECT COALESCE(SUM(monto), 0) FROM pago WHERE factura_id = ?";
+        String sql = "SELECT COALESCE(SUM(monto),0) FROM pago WHERE factura_id = ?";
         try (Connection cn = DataSourceFactory.getConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setLong(1, facturaId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getBigDecimal(1);
-                return BigDecimal.ZERO;
+                return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
             }
         } catch (Exception e) {
             throw new RuntimeException("Error consultando total pagado de factura " + facturaId, e);
         }
     }
 
-    /** Inserta un pago. Si quieres, puedes auditar cajero_id en una columna aparte. */
-    public void registrar(long facturaId, long formaPagoId, BigDecimal monto, Long cajeroId) {
+    /** Inserta un pago. (Si quieres auditar cajero_id, lo añadimos luego). */
+    public void registrar(long facturaId, long formaPagoId, BigDecimal monto) {
         String sql = "INSERT INTO pago (factura_id, forma_pago_id, monto) VALUES (?,?,?)";
         try (Connection cn = DataSourceFactory.getConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {

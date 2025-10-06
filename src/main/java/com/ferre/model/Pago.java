@@ -3,35 +3,30 @@ package com.ferre.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Representa un pago aplicado a una factura.
- * Tabla relacionada: pago (id, factura_id, forma_pago_id, monto, creado_en)
- */
+/** Pago aplicado a una factura: pago(id, factura_id, forma_pago_id, monto, creado_en) */
 public class Pago {
-
-    private Long id;
-    private Long facturaId;
-    private FormaPago formaPago;         // objeto con id y nombre
+    private long id;
+    private long facturaId;
+    private long formaPagoId;          // << Usamos el ID directo
     private BigDecimal monto = BigDecimal.ZERO;
-    private LocalDateTime creadoEn;      // opcional, si lo guardas en BD
+    private LocalDateTime creadoEn;
 
-    public Pago() { }
+    public Pago() {}
 
-    public Pago(Long facturaId, FormaPago formaPago, BigDecimal monto) {
+    public Pago(long facturaId, long formaPagoId, BigDecimal monto) {
         this.facturaId = facturaId;
-        this.formaPago = formaPago;
+        this.formaPagoId = formaPagoId;
         this.monto = monto;
     }
 
-    // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public long getId() { return id; }
+    public void setId(long id) { this.id = id; }
 
-    public Long getFacturaId() { return facturaId; }
-    public void setFacturaId(Long facturaId) { this.facturaId = facturaId; }
+    public long getFacturaId() { return facturaId; }
+    public void setFacturaId(long facturaId) { this.facturaId = facturaId; }
 
-    public FormaPago getFormaPago() { return formaPago; }
-    public void setFormaPago(FormaPago formaPago) { this.formaPago = formaPago; }
+    public long getFormaPagoId() { return formaPagoId; }
+    public void setFormaPagoId(long formaPagoId) { this.formaPagoId = formaPagoId; }
 
     public BigDecimal getMonto() { return monto; }
     public void setMonto(BigDecimal monto) { this.monto = monto; }

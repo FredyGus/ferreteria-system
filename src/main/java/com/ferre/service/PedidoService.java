@@ -38,4 +38,26 @@ public class PedidoService {
 
     public java.util.List<Pedido> listarPendientes(){ return dao.listarPendientes(); }
     public java.util.List<PedidoDet> detalles(long pedidoId){ return dao.obtenerDetalles(pedidoId); }
+    
+    public com.ferre.model.Pedido findById(long id){
+    String sql = "SELECT id, cliente_id, vendedor_id, fecha, estado, total FROM pedido WHERE id=?";
+    try (var cn = com.ferre.config.DataSourceFactory.getConnection();
+         var ps = cn.prepareStatement(sql)) {
+        ps.setLong(1, id);
+        try (var rs = ps.executeQuery()){
+            if (!rs.next()) return null;
+            var p = new com.ferre.model.Pedido();
+            p.setId(rs.getLong("id"));
+            p.setClienteId(rs.getLong("cliente_id"));
+            p.setVendedorId(rs.getLong("vendedor_id"));
+            p.setFecha(rs.getTimestamp("fecha").toLocalDateTime());
+            p.setEstado(rs.getString("estado"));
+            p.setTotal(rs.getBigDecimal("total"));
+            return p;
+        }
+    } catch (Exception e) {
+        throw new RuntimeException("No se pudo cargar el pedido: " + e.getMessage(), e);
+    }
+}
+
 }
