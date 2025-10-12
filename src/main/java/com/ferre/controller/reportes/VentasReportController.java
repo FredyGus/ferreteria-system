@@ -7,17 +7,14 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
 public class VentasReportController {
 
-    @FXML
-    private DatePicker dpDesde, dpHasta;
-    @FXML
-    private ComboBox<Cliente> cmbCliente;
+    @FXML private DatePicker dpDesde, dpHasta;
+    @FXML private ComboBox<Cliente> cmbCliente;
 
     private final ReportService rs = new ReportService();
     private final ClienteService cliSrv = new ClienteService();
@@ -49,14 +46,28 @@ public class VentasReportController {
         });
     }
 
+    private boolean validarRango() {
+        var desde = dpDesde.getValue();
+        var hasta = dpHasta.getValue();
+        if (desde == null || hasta == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona el rango de fechas.").showAndWait();
+            return false;
+        }
+        if (hasta.isBefore(desde)) {
+            new Alert(Alert.AlertType.WARNING, "La fecha 'Hasta' no puede ser menor que 'Desde'.").showAndWait();
+            return false;
+        }
+        return true;
+    }
+
     private Map<String, Object> buildParams() {
         LocalDate desde = dpDesde.getValue();
         LocalDate hasta = dpHasta.getValue();
 
         Map<String, Object> p = new HashMap<>();
-        p.put("P_FECHA_INI", Timestamp.valueOf(desde.atStartOfDay()));                // inclusivo
-        p.put("P_FECHA_FIN_EXC", Timestamp.valueOf(hasta.plusDays(1).atStartOfDay())); // exclusivo
-        p.put("P_FECHA_FIN_SHOW", java.sql.Date.valueOf(hasta));                       // solo para el título
+        // Los JRXML esperan java.util.Date (DATE)
+        p.put("P_FECHA_INI", java.sql.Date.valueOf(desde));
+        p.put("P_FECHA_FIN", java.sql.Date.valueOf(hasta));
 
         Cliente c = cmbCliente.getSelectionModel().getSelectedItem();
         p.put("P_CLIENTE_ID", c == null ? null : c.getId());
@@ -66,6 +77,7 @@ public class VentasReportController {
 
     @FXML
     private void verDetalle() {
+        if (!validarRango()) return;
         try {
             var print = rs.fill("/reports/ventas_detalle.jrxml", buildParams());
             if (print.getPages().isEmpty()) {
@@ -81,6 +93,7 @@ public class VentasReportController {
 
     @FXML
     private void verResumen() {
+        if (!validarRango()) return;
         try {
             var print = rs.fill("/reports/ventas_resumen.jrxml", buildParams());
             if (print.getPages().isEmpty()) {

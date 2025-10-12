@@ -12,7 +12,9 @@
                     <Label text="Facturar Pedido" styleClass="title"/>
                     <Label fx:id="lblTotal" styleClass="status"/>
                 </children>
-                <padding><Insets top="8" right="12" bottom="8" left="12"/></padding>
+                <padding>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
+                </padding>
             </HBox>
 
             <GridPane hgap="8" vgap="8" style="-fx-padding: 0 12 8 12;">
@@ -34,8 +36,7 @@
                     <Label text="Número:" GridPane.columnIndex="4"/>
                     <TextField fx:id="txtNumero" GridPane.columnIndex="5"/>
 
-                    <Label text="Forma de pago:" GridPane.rowIndex="1"/>
-                    <ComboBox fx:id="cmbFormaPago" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    
                 </children>
             </GridPane>
         </VBox>
