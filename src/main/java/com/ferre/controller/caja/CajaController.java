@@ -1,292 +1,248 @@
 package com.ferre.controller.caja;
 
-import com.ferre.config.Session;
-import com.ferre.model.Cliente;
+import com.ferre.config.DataSourceFactory;
 import com.ferre.model.Factura;
-import com.ferre.model.FormaPago;
-import com.ferre.model.Pago;
-import com.ferre.model.Pedido;
-import com.ferre.model.Usuario;
-import com.ferre.service.ClienteService;
-import com.ferre.service.FacturaService;
-import com.ferre.service.FormaPagoService;
-import com.ferre.service.PagoService;
-import com.ferre.service.PedidoService;
-import com.ferre.service.UsuarioService;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.util.StringConverter;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
+/**
+ * Caja — Cobro de factura en EFECTIVO con cálculo de CAMBIO.
+ * - Muestra datos de factura (cliente, vendedor, total).
+ * - Ingresa efectivo recibido y calcula cambio en vivo.
+ * - Registra un pago EFECTIVO por el total de la factura (forma_pago_id = 1).
+ * - Marca el pedido como PAGADO (si no lo está).
+ */
 public class CajaController {
 
-    // Cabecera
-    @FXML
-    private Label lblFactura;
-    @FXML
-    private Label lblCliente;
-    @FXML
-    private Label lblVendedor;
-    @FXML
-    private Label lblFecha;
-    @FXML
-    private Label lblTotal;
-    @FXML
-    private Label lblPagado;
-    @FXML
-    private Label lblSaldo;
+    @FXML private Label lblFactura;
+    @FXML private Label lblCliente;
+    @FXML private Label lblVendedor;
+    @FXML private Label lblTotal;
+    @FXML private Label lblCambio;
+    @FXML private TextField txtEfectivo;
+    @FXML private Button btnCobrar;
 
-    // Entrada
-    @FXML
-    private ComboBox<FormaPago> cmbForma;
-    @FXML
-    private TextField txtMonto;
+    // Estado interno
+    private long facturaId = 0L;
+    private long pedidoId  = 0L;
+    private BigDecimal total = BigDecimal.ZERO;
 
-    // Tabla
-    @FXML
-    private TableView<Pago> tblPagos;
-    @FXML
-    private TableColumn<Pago, String> colForma;
-    @FXML
-    private TableColumn<Pago, String> colMonto;
-
-    // Estado
-    private final ObservableList<Pago> pagosSesion = FXCollections.observableArrayList();
-    private Factura facturaActual;
-
-    // Servicios
-    private final FormaPagoService formaSrv = new FormaPagoService();
-    private final PagoService pagoSrv = new PagoService();
-    private final FacturaService facturaSrv = new FacturaService();
-    private final PedidoService pedidoSrv = new PedidoService();
-    private final ClienteService clienteSrv = new ClienteService();
-    private final UsuarioService usuarioSrv = new UsuarioService();
-
-    // Utilidades
-    private final NumberFormat money = NumberFormat.getCurrencyInstance(new Locale("es", "GT"));
-    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private Map<Long, String> formaNombreById = new HashMap<>();
+    // Forma de pago EFECTIVO (de tus semillas: id=1)
+    private static final long FORMA_PAGO_EFECTIVO_ID = 1L;
 
     @FXML
     public void initialize() {
-        // Seguridad básica
-        if (Session.get() == null) {
-            new Alert(Alert.AlertType.WARNING,
-                    "No hay usuario en sesión. Vuelve a iniciar sesión para usar Caja.",
-                    ButtonType.OK).showAndWait();
-            deshabilitarTodo();
+        // Recalcular cambio cuando escriben efectivo
+        txtEfectivo.textProperty().addListener((obs, oldv, newv) -> calcularCambioSeguro());
+        Platform.runLater(this::calcularCambioSeguro);
+    }
+
+    /** Llamado desde MainController cuando venimos de Facturar. */
+    public void setFactura(Factura f){
+        // getId() es long primitivo: no comparar contra null
+        if (f == null || f.getId() <= 0) {
+            error("Factura inválida", "No se recibió la factura a cobrar.");
+            deshabilitarCobro();
+            return;
+        }
+        this.facturaId = f.getId();
+        cargarResumenFactura(facturaId);
+    }
+
+    /** Limpia solo los campos de efectivo/cambio (no toca datos de factura). */
+    @FXML
+    private void limpiar(){
+        txtEfectivo.clear();
+        lblCambio.setText("0.00");
+        if (btnCobrar != null) btnCobrar.setDisable(false);
+        txtEfectivo.setDisable(false);
+        txtEfectivo.requestFocus();
+    }
+
+    /** Acción de cobrar: valida efectivo >= total, registra pago y marca pedido PAGADO. */
+    @FXML
+    private void cobrar(){
+        if (facturaId <= 0) {
+            warn("No hay factura cargada.");
+            return;
+        }
+        BigDecimal efectivo = leerDecimal(txtEfectivo.getText());
+        if (efectivo.compareTo(total) < 0) {
+            warn("El efectivo recibido es menor al total.");
             return;
         }
 
-        // Combos
-        var formas = FXCollections.observableArrayList(formaSrv.listar());
-        formaNombreById = formas.stream()
-                .collect(Collectors.toMap(FormaPago::getId, FormaPago::getNombre));
-        cmbForma.setItems(formas);
-        cmbForma.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(FormaPago fp) {
-                return fp == null ? "" : fp.getNombre();
-            }
-
-            @Override
-            public FormaPago fromString(String s) {
-                return null;
-            }
-        });
-
-        // Solo números/decimal en monto
-        txtMonto.textProperty().addListener((obs, oldV, newV) -> {
-            if (newV == null) {
-                return;
-            }
-            String clean = newV.replace(",", ".")
-                    .replaceAll("[^0-9.]", "");
-            // máximo un punto
-            int first = clean.indexOf('.');
-            if (first >= 0) {
-                int next = clean.indexOf('.', first + 1);
-                if (next > 0) {
-                    clean = clean.substring(0, next);
+        try (Connection cn = DataSourceFactory.getConnection()) {
+            cn.setAutoCommit(false);
+            try {
+                // 1) Verificar si ya existe un pago para esta factura
+                if (existePagoFactura(cn, facturaId)) {
+                    throw new IllegalStateException("Esta factura ya fue cobrada.");
                 }
+
+                // 2) Insertar pago por el TOTAL (lo contable es el total).
+                insertarPago(cn, facturaId, FORMA_PAGO_EFECTIVO_ID, total);
+
+                // 3) Marcar pedido como PAGADO (si aplica)
+                marcarPedidoPagado(cn, pedidoId);
+
+                cn.commit();
+
+                BigDecimal cambio = efectivo.subtract(total);
+                info("Cobro registrado",
+                        "Pago en efectivo guardado.\n" +
+                        "Total: " + total + "\n" +
+                        "Efectivo: " + efectivo + "\n" +
+                        "Cambio: " + cambio);
+
+                // Bloquear edición tras cobrar
+                txtEfectivo.setDisable(true);
+                btnCobrar.setDisable(true);
+                lblCambio.setText(formatear(cambio));
+
+            } catch (Exception ex) {
+                cn.rollback();
+                throw ex;
+            } finally {
+                cn.setAutoCommit(true);
             }
-            if (!clean.equals(newV)) {
-                txtMonto.setText(clean);
-            }
-        });
-
-        // Tabla
-        tblPagos.setItems(pagosSesion);
-        colForma.setCellValueFactory(cd -> {
-            // >>> Ajusta aquí si tu getter se llama distinto:
-            long formaId = cd.getValue().getFormaPagoId();
-            String nombre = formaNombreById.getOrDefault(formaId, String.valueOf(formaId));
-            return new SimpleStringProperty(nombre);
-        });
-        colMonto.setCellValueFactory(cd
-                -> new SimpleStringProperty(money.format(cd.getValue().getMonto())));
-
-        refrescarTotales(); // valores en blanco inicialmente
-    }
-
-    public void setFactura(com.ferre.model.Factura f) {
-        // Traemos la factura completa por id
-        this.facturaActual = facturaSrv.findById(f.getId());
-
-        // Limpiamos pagos en memoria y refrescamos la UI
-        pagosSesion.clear();
-        pintarCabecera();   // debe llenar lblFactura, lblCliente, lblVendedor, lblFecha, lblTotal
-        refrescarTotales(); // debe recalcular Pagado/Saldo con lo de BD (0 si aún no hay pagos)
-    }
-
-    private void pintarCabecera() {
-        if (facturaActual == null) {
-            return;
-        }
-
-        lblFactura.setText(facturaActual.getSerie() + "-" + facturaActual.getNumero());
-
-        // Pedido -> cliente y vendedor
-        Pedido ped = pedidoSrv.findById(facturaActual.getPedidoId()); // Ajusta si tu service se llama distinto
-        if (ped != null) {
-            Cliente cli = clienteSrv.findById(ped.getClienteId());
-            Usuario ven = usuarioSrv.findById(ped.getVendedorId());
-            lblCliente.setText(cli != null ? cli.getNombre() : "-");
-            lblVendedor.setText(ven != null ? ven.getNombre() : "-");
-        } else {
-            lblCliente.setText("-");
-            lblVendedor.setText("-");
-        }
-
-        lblFecha.setText(facturaActual.getFecha() == null
-                ? "-"
-                : dtf.format(facturaActual.getFecha()));
-        lblTotal.setText(money.format(nvl(facturaActual.getTotal())));
-    }
-
-    @FXML
-    private void agregarPago() {
-        var fp = cmbForma.getValue();
-        var monto = toBig(txtMonto.getText());
-        if (fp == null) {
-            alert(Alert.AlertType.WARNING, "Selecciona una forma de pago.");
-            return;
-        }
-        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            alert(Alert.AlertType.WARNING, "Ingresa un monto válido mayor a 0.");
-            return;
-        }
-        var p = new Pago();
-        // >>> Ajusta esta línea si tu modelo usa otro nombre de setter:
-        p.setFormaPagoId(fp.getId());
-        p.setMonto(monto);
-        pagosSesion.add(p);
-        txtMonto.clear();
-        refrescarTotales();
-    }
-
-    @FXML
-    private void quitarPago() {
-        var sel = tblPagos.getSelectionModel().getSelectedItem();
-        if (sel != null) {
-            pagosSesion.remove(sel);
-            refrescarTotales();
-        }
-    }
-
-    @FXML
-    private void cobrar() {
-        if (facturaActual == null) {
-            return;
-        }
-
-        BigDecimal totalSesion = pagosSesion.stream()
-                .map(Pago::getMonto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (totalSesion.compareTo(BigDecimal.ZERO) <= 0) {
-            alert(Alert.AlertType.WARNING, "No hay pagos en la lista.");
-            return;
-        }
-
-        var ok = new Alert(Alert.AlertType.CONFIRMATION,
-                "Se registrarán " + pagosSesion.size() + " pago(s) por " + money.format(totalSesion) + ". ¿Continuar?",
-                ButtonType.OK, ButtonType.CANCEL).showAndWait();
-
-        if (ok.isEmpty() || ok.get() == ButtonType.CANCEL) {
-            return;
-        }
-
-        // Persistir cada pago
-        for (Pago p : pagosSesion) {
-            // >>> Ajusta getFormaPagoId() si tu getter tiene otro nombre
-            pagoSrv.registrar(facturaActual.getId(), p.getFormaPagoId(), p.getMonto());
-        }
-
-        new Alert(Alert.AlertType.INFORMATION, "Pagos registrados con éxito.").showAndWait();
-        pagosSesion.clear();
-        refrescarTotales();
-        // puedes recargar cabecera si cambió estado/saldo en BD
-    }
-
-    // ======================
-    // Utilidades de pantalla
-    // ======================
-    private void refrescarTotales() {
-        if (facturaActual == null) {
-            lblPagado.setText(money.format(0));
-            lblSaldo.setText(money.format(0));
-            return;
-        }
-        BigDecimal pagadoDb = pagoSrv.totalPagadoPorFactura(facturaActual.getId()); // 0 si no hay
-        BigDecimal pagadoSesion = pagosSesion.stream()
-                .map(Pago::getMonto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal total = nvl(facturaActual.getTotal());
-        BigDecimal saldo = total.subtract(pagadoDb).subtract(pagadoSesion);
-
-        lblPagado.setText(money.format(pagadoDb.add(pagadoSesion)));
-        lblSaldo.setText(money.format(saldo.max(BigDecimal.ZERO)));
-    }
-
-    private void deshabilitarTodo() {
-        if (cmbForma != null) {
-            cmbForma.setDisable(true);
-        }
-        if (txtMonto != null) {
-            txtMonto.setDisable(true);
-        }
-        if (tblPagos != null) {
-            tblPagos.setDisable(true);
-        }
-    }
-
-    private BigDecimal nvl(BigDecimal v) {
-        return v == null ? BigDecimal.ZERO : v;
-    }
-
-    private BigDecimal toBig(String s) {
-        if (s == null || s.isBlank()) {
-            return BigDecimal.ZERO;
-        }
-        try {
-            return new BigDecimal(s.replace(",", ".").trim());
         } catch (Exception e) {
+            error("No se pudo registrar el cobro", mensajeLimpio(e));
+        }
+    }
+
+    /* =========================
+       Carga de datos de factura
+       ========================= */
+    private void cargarResumenFactura(long facturaId){
+        String sql = """
+            SELECT f.id, f.serie, f.numero, f.total, f.pedido_id,
+                   c.nombre AS cliente, u.nombre AS vendedor
+            FROM factura f
+            JOIN pedido  p ON p.id = f.pedido_id
+            JOIN clientes c ON c.id = p.cliente_id
+            JOIN usuarios u ON u.id = p.vendedor_id
+            WHERE f.id = ?
+        """;
+        try (Connection cn = DataSourceFactory.getConnection();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, facturaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()){
+                    throw new IllegalStateException("Factura no encontrada: " + facturaId);
+                }
+                String serie  = nvl(rs.getString("serie"));
+                String numero = nvl(rs.getString("numero"));
+                total         = rs.getBigDecimal("total");
+                pedidoId      = rs.getLong("pedido_id");
+                String cliente  = nvl(rs.getString("cliente"));
+                String vendedor = nvl(rs.getString("vendedor"));
+
+                lblFactura.setText( (serie.isBlank() && numero.isBlank())
+                        ? ("#" + facturaId)
+                        : (serie + "-" + numero) );
+                lblCliente.setText(cliente);
+                lblVendedor.setText(vendedor);
+                lblTotal.setText(formatear(total));
+                lblCambio.setText("0.00");
+                txtEfectivo.setText("");
+                txtEfectivo.requestFocus();
+            }
+        } catch (Exception e) {
+            error("No se pudo cargar la factura", mensajeLimpio(e));
+            deshabilitarCobro();
+        }
+    }
+
+    /* =========================
+       Persistencia de pagos/estado
+       ========================= */
+    private boolean existePagoFactura(Connection cn, long facturaId) throws Exception {
+        String sql = "SELECT COUNT(*) FROM pago WHERE factura_id = ?";
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, facturaId);
+            try (ResultSet rs = ps.executeQuery()){
+                rs.next();
+                return rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    private void insertarPago(Connection cn, long facturaId, long formaPagoId, BigDecimal monto) throws Exception {
+        String sql = "INSERT INTO pago(factura_id, forma_pago_id, monto) VALUES(?,?,?)";
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, facturaId);
+            ps.setLong(2, formaPagoId);
+            ps.setBigDecimal(3, monto);
+            ps.executeUpdate();
+        }
+    }
+
+    private void marcarPedidoPagado(Connection cn, long pedidoId) throws Exception {
+        if (pedidoId <= 0) return;
+        String sql = "UPDATE pedido SET estado='PAGADO' WHERE id=? AND estado<>'PAGADO'";
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, pedidoId);
+            ps.executeUpdate();
+        }
+    }
+
+    /* =========================
+       Utilidades UI
+       ========================= */
+    private void calcularCambioSeguro(){
+        BigDecimal efectivo = leerDecimal(txtEfectivo.getText());
+        BigDecimal cambio = efectivo.subtract(total);
+        if (cambio.compareTo(BigDecimal.ZERO) < 0) cambio = BigDecimal.ZERO;
+        lblCambio.setText(formatear(cambio));
+    }
+
+    private BigDecimal leerDecimal(String s){
+        try {
+            if (s == null || s.trim().isEmpty()) return BigDecimal.ZERO;
+            return new BigDecimal(s.trim());
+        } catch (Exception e){
             return BigDecimal.ZERO;
         }
     }
 
-    private void alert(Alert.AlertType t, String msg) {
-        new Alert(t, msg, ButtonType.OK).showAndWait();
+    private String formatear(BigDecimal bd){
+        return bd == null ? "0.00" : bd.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
     }
+
+    private String mensajeLimpio(Throwable t){
+        String m = (t.getMessage() == null || t.getMessage().isBlank()) ? t.toString() : t.getMessage();
+        // Mensajes más amigables
+        if (m.toLowerCase().contains("duplicate") || m.toLowerCase().contains("ya fue cobrada")){
+            return "Esta factura ya está cobrada.";
+        }
+        return m;
+    }
+
+    private void deshabilitarCobro(){
+        if (btnCobrar != null) btnCobrar.setDisable(true);
+        if (txtEfectivo != null) txtEfectivo.setDisable(true);
+    }
+
+    private void info(String h, String m){ alert(Alert.AlertType.INFORMATION, h, m); }
+    private void warn(String m){ alert(Alert.AlertType.WARNING, "Atención", m); }
+    private void error(String h, String m){ alert(Alert.AlertType.ERROR, h, m); }
+    private void alert(Alert.AlertType t, String h, String m){
+        var a = new Alert(t);
+        a.setHeaderText(h);
+        a.setContentText(m);
+        a.setTitle("Caja");
+        a.showAndWait();
+    }
+
+    private static String nvl(String s){ return s == null ? "" : s; }
 }
