@@ -48,8 +48,8 @@ public class KardexReportController {
     private HashMap<String, Object> buildParams(Producto prod, LocalDate desde, LocalDate hasta) {
         var params = new HashMap<String, Object>();
         params.put("P_PRODUCTO_ID", prod.getId());
-        params.put("P_FECHA_INI", java.sql.Date.valueOf(desde)); // DATE inclusivo
-        params.put("P_FECHA_FIN", java.sql.Date.valueOf(hasta)); // DATE inclusivo
+        params.put("P_FECHA_INI", java.sql.Date.valueOf(desde)); 
+        params.put("P_FECHA_FIN", java.sql.Date.valueOf(hasta)); 
         return params;
     }
 

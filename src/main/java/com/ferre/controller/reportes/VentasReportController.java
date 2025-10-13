@@ -13,8 +13,10 @@ import java.util.Map;
 
 public class VentasReportController {
 
-    @FXML private DatePicker dpDesde, dpHasta;
-    @FXML private ComboBox<Cliente> cmbCliente;
+    @FXML
+    private DatePicker dpDesde, dpHasta;
+    @FXML
+    private ComboBox<Cliente> cmbCliente;
 
     private final ReportService rs = new ReportService();
     private final ClienteService cliSrv = new ClienteService();
@@ -77,7 +79,9 @@ public class VentasReportController {
 
     @FXML
     private void verDetalle() {
-        if (!validarRango()) return;
+        if (!validarRango()) {
+            return;
+        }
         try {
             var print = rs.fill("/reports/ventas_detalle.jrxml", buildParams());
             if (print.getPages().isEmpty()) {
@@ -93,7 +97,9 @@ public class VentasReportController {
 
     @FXML
     private void verResumen() {
-        if (!validarRango()) return;
+        if (!validarRango()) {
+            return;
+        }
         try {
             var print = rs.fill("/reports/ventas_resumen.jrxml", buildParams());
             if (print.getPages().isEmpty()) {

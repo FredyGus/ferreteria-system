@@ -4,14 +4,8 @@ import com.ferre.model.Factura;
 
 import java.sql.*;
 
-/**
- * Implementación JDBC de FacturaDao. Nota: el descuento de stock se hace de
- * forma ATÓMICA con UPDATE ... WHERE stock >= ?, para evitar inventario
- * negativo incluso bajo concurrencia.
- */
 public class FacturaDaoJdbc implements FacturaDao {
 
-    // reemplaza TODO el método por esto
     @Override
     public long crearFactura(Connection cn, Factura f) {
         String sql = "INSERT INTO factura(pedido_id, cajero_id, fecha, serie, numero, total) VALUES(?,?,?,?,?,?)";
@@ -19,11 +13,6 @@ public class FacturaDaoJdbc implements FacturaDao {
             ps.setLong(1, f.getPedidoId());
             ps.setLong(2, f.getCajeroId());
 
-            // <<< GUARDA SOLO LA FECHA >>>
-            // Si tu modelo tiene LocalDateTime:
-            // ps.setDate(3, java.sql.Date.valueOf(f.getFecha().toLocalDate()));
-            // Si tu modelo ya usa LocalDate:
-            // ps.setDate(3, java.sql.Date.valueOf(f.getFecha()));
             ps.setDate(3, java.sql.Date.valueOf(f.getFecha().toLocalDate()));
 
             ps.setString(4, f.getSerie());
@@ -74,7 +63,6 @@ public class FacturaDaoJdbc implements FacturaDao {
 
     @Override
     public void disminuirStock(Connection cn, long productoId, int cantidad) {
-        // DESCUENTO ATÓMICO: solo descuenta si stock >= cantidad
         final String sql = "UPDATE productos "
                 + "SET stock = stock - ? "
                 + "WHERE id = ? AND stock >= ?";
@@ -84,7 +72,6 @@ public class FacturaDaoJdbc implements FacturaDao {
             ps.setInt(3, cantidad);
             int rows = ps.executeUpdate();
             if (rows == 0) {
-                // Nadie actualizó: o no existe el producto, o stock era insuficiente.
                 throw new IllegalStateException(
                         "Stock insuficiente para producto ID " + productoId + " al descontar " + cantidad + "."
                 );

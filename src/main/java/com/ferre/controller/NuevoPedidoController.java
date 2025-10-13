@@ -20,16 +20,24 @@ import java.util.List;
 
 public class NuevoPedidoController {
 
-    @FXML private ComboBox<Cliente> cmbCliente;
-    @FXML private Label lblVendedor;
-    @FXML private TextField txtObs;
+    @FXML
+    private ComboBox<Cliente> cmbCliente;
+    @FXML
+    private Label lblVendedor;
+    @FXML
+    private TextField txtObs;
 
-    @FXML private ComboBox<Producto> cmbProducto;
-    @FXML private TextField txtCantidad, txtPrecio;
+    @FXML
+    private ComboBox<Producto> cmbProducto;
+    @FXML
+    private TextField txtCantidad, txtPrecio;
 
-    @FXML private TableView<PedidoDet> tbl;
-    @FXML private TableColumn<PedidoDet,String> colCodigo, colNombre, colCantidad, colPrecio, colSubtotal;
-    @FXML private Label lblTotal;
+    @FXML
+    private TableView<PedidoDet> tbl;
+    @FXML
+    private TableColumn<PedidoDet, String> colCodigo, colNombre, colCantidad, colPrecio, colSubtotal;
+    @FXML
+    private Label lblTotal;
 
     private final ClienteService cliService = new ClienteService();
     private final ProductoService prodService = new ProductoService();
@@ -38,19 +46,21 @@ public class NuevoPedidoController {
     private final List<PedidoDet> detalles = new ArrayList<>();
 
     @FXML
-    public void initialize(){
+    public void initialize() {
         cmbCliente.setItems(FXCollections.observableArrayList(cliService.listar()));
         cmbProducto.setItems(FXCollections.observableArrayList(prodService.listar()));
         cmbProducto.setCellFactory(cb -> new ListCell<>() {
-            @Override protected void updateItem(Producto p, boolean empty) {
+            @Override
+            protected void updateItem(Producto p, boolean empty) {
                 super.updateItem(p, empty);
-                setText(empty || p==null ? null : p.getCodigo() + " — " + p.getNombre());
+                setText(empty || p == null ? null : p.getCodigo() + " — " + p.getNombre());
             }
         });
         cmbProducto.setButtonCell(new ListCell<>() {
-            @Override protected void updateItem(Producto p, boolean empty) {
+            @Override
+            protected void updateItem(Producto p, boolean empty) {
                 super.updateItem(p, empty);
-                setText(empty || p==null ? null : p.getCodigo() + " — " + p.getNombre());
+                setText(empty || p == null ? null : p.getCodigo() + " — " + p.getNombre());
             }
         });
 
@@ -61,32 +71,46 @@ public class NuevoPedidoController {
         colSubtotal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSubtotal().toPlainString()));
 
         lblVendedor.setText(Session.get().getUsuario());
-        refrescarTabla(); recalcularTotal();
+        refrescarTabla();
+        recalcularTotal();
     }
 
-    private String findCodigo(long id){
-        return cmbProducto.getItems().stream().filter(p->p.getId()==id).map(Producto::getCodigo).findFirst().orElse("?");
-    }
-    private String findNombre(long id){
-        return cmbProducto.getItems().stream().filter(p->p.getId()==id).map(Producto::getNombre).findFirst().orElse("?");
+    private String findCodigo(long id) {
+        return cmbProducto.getItems().stream().filter(p -> p.getId() == id).map(Producto::getCodigo).findFirst().orElse("?");
     }
 
-    @FXML private void agregarItem(){
-        try{
+    private String findNombre(long id) {
+        return cmbProducto.getItems().stream().filter(p -> p.getId() == id).map(Producto::getNombre).findFirst().orElse("?");
+    }
+
+    @FXML
+    private void agregarItem() {
+        try {
             var p = cmbProducto.getSelectionModel().getSelectedItem();
-            if (p==null){ warn("Selecciona un producto"); return; }
+            if (p == null) {
+                warn("Selecciona un producto");
+                return;
+            }
             int cant = Integer.parseInt(txtCantidad.getText().trim());
             BigDecimal precio = new BigDecimal(txtPrecio.getText().trim());
-            if (cant <= 0) { warn("Cantidad debe ser > 0"); return; }
-            if (precio.compareTo(BigDecimal.ZERO) <= 0) { warn("Precio debe ser > 0"); return; }
+            if (cant <= 0) {
+                warn("Cantidad debe ser > 0");
+                return;
+            }
+            if (precio.compareTo(BigDecimal.ZERO) <= 0) {
+                warn("Precio debe ser > 0");
+                return;
+            }
 
             // Si el producto ya está, suma cantidades y recalcula
-            for (PedidoDet d : detalles){
-                if (d.getProductoId() == p.getId()){
+            for (PedidoDet d : detalles) {
+                if (d.getProductoId() == p.getId()) {
                     d.setCantidad(d.getCantidad() + cant);
                     d.setPrecioUnit(precio);
                     d.setSubtotal(precio.multiply(BigDecimal.valueOf(d.getCantidad())));
-                    refrescarTabla(); recalcularTotal(); limpiarLinea();
+                    refrescarTabla();
+                    recalcularTotal();
+                    limpiarLinea();
                     return;
                 }
             }
@@ -98,30 +122,48 @@ public class NuevoPedidoController {
             d.setSubtotal(precio.multiply(BigDecimal.valueOf(cant)));
             detalles.add(d);
 
-            refrescarTabla(); recalcularTotal(); limpiarLinea();
-        }catch (NumberFormatException nfe){
+            refrescarTabla();
+            recalcularTotal();
+            limpiarLinea();
+        } catch (NumberFormatException nfe) {
             warn("Cantidad/Precio inválidos");
         }
     }
 
-    @FXML private void eliminarItem(){
+    @FXML
+    private void eliminarItem() {
         var sel = tbl.getSelectionModel().getSelectedItem();
-        if (sel==null){ warn("Selecciona una fila"); return; }
-        detalles.remove(sel); refrescarTabla(); recalcularTotal();
+        if (sel == null) {
+            warn("Selecciona una fila");
+            return;
+        }
+        detalles.remove(sel);
+        refrescarTabla();
+        recalcularTotal();
     }
 
-    @FXML private void nuevo(){
+    @FXML
+    private void nuevo() {
         cmbCliente.getSelectionModel().clearSelection();
         txtObs.clear();
         detalles.clear();
-        refrescarTabla(); recalcularTotal(); limpiarLinea();
+        refrescarTabla();
+        recalcularTotal();
+        limpiarLinea();
     }
 
-    @FXML private void guardar(){
-        try{
+    @FXML
+    private void guardar() {
+        try {
             var cli = cmbCliente.getSelectionModel().getSelectedItem();
-            if (cli==null){ warn("Selecciona cliente"); return; }
-            if (detalles.isEmpty()){ warn("Agrega ítems"); return; }
+            if (cli == null) {
+                warn("Selecciona cliente");
+                return;
+            }
+            if (detalles.isEmpty()) {
+                warn("Agrega ítems");
+                return;
+            }
 
             Pedido cab = new Pedido();
             cab.setClienteId(cli.getId());
@@ -130,21 +172,46 @@ public class NuevoPedidoController {
             cab.setObservaciones(txtObs.getText());
 
             long id = pedidoService.crearPedido(cab, detalles);
-            info("Pedido creado","No. " + id + " guardado (estado PENDIENTE).");
+            info("Pedido creado", "No. " + id + " guardado (estado PENDIENTE).");
             nuevo();
-        }catch(Exception ex){ error("Error", ex.getMessage()); }
+        } catch (Exception ex) {
+            error("Error", ex.getMessage());
+        }
     }
 
-    private void limpiarLinea(){ cmbProducto.getSelectionModel().clearSelection(); txtCantidad.clear(); txtPrecio.clear(); }
-    private void refrescarTabla(){ tbl.setItems(FXCollections.observableArrayList(detalles)); }
-    private void recalcularTotal(){
+    private void limpiarLinea() {
+        cmbProducto.getSelectionModel().clearSelection();
+        txtCantidad.clear();
+        txtPrecio.clear();
+    }
+
+    private void refrescarTabla() {
+        tbl.setItems(FXCollections.observableArrayList(detalles));
+    }
+
+    private void recalcularTotal() {
         java.math.BigDecimal t = detalles.stream().map(PedidoDet::getSubtotal)
                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
         lblTotal.setText("Total: " + t.toPlainString());
     }
 
-    private void info(String h, String m){ alert(Alert.AlertType.INFORMATION,h,m); }
-    private void warn(String m){ alert(Alert.AlertType.WARNING,"Atención",m); }
-    private void error(String h, String m){ alert(Alert.AlertType.ERROR,h,m); }
-    private void alert(Alert.AlertType t, String h, String m){ var a=new Alert(t); a.setHeaderText(h); a.setContentText(m); a.setTitle("Nuevo Pedido"); a.showAndWait(); }
+    private void info(String h, String m) {
+        alert(Alert.AlertType.INFORMATION, h, m);
+    }
+
+    private void warn(String m) {
+        alert(Alert.AlertType.WARNING, "Atención", m);
+    }
+
+    private void error(String h, String m) {
+        alert(Alert.AlertType.ERROR, h, m);
+    }
+
+    private void alert(Alert.AlertType t, String h, String m) {
+        var a = new Alert(t);
+        a.setHeaderText(h);
+        a.setContentText(m);
+        a.setTitle("Nuevo Pedido");
+        a.showAndWait();
+    }
 }

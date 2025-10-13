@@ -22,11 +22,15 @@ public class PedidoDaoJdbc implements PedidoDao {
             ps.setString(5, p.getObservaciones());
             ps.setBigDecimal(6, p.getTotal());
             ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()){
-                if (rs.next()) return rs.getLong(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
                 throw new RuntimeException("No se obtuvo ID de pedido");
             }
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -39,17 +43,17 @@ public class PedidoDaoJdbc implements PedidoDao {
             ps.setBigDecimal(4, d.getPrecioUnit());
             ps.setBigDecimal(5, d.getSubtotal());
             ps.executeUpdate();
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public List<Pedido> listarPendientes() {
         String sql = "SELECT * FROM pedido WHERE estado='PENDIENTE' ORDER BY id DESC";
         List<Pedido> out = new ArrayList<>();
-        try (Connection cn = com.ferre.config.DataSourceFactory.getConnection();
-             Statement st = cn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()){
+        try (Connection cn = com.ferre.config.DataSourceFactory.getConnection(); Statement st = cn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
                 Pedido p = new Pedido();
                 p.setId(rs.getLong("id"));
                 p.setClienteId(rs.getLong("cliente_id"));
@@ -60,7 +64,9 @@ public class PedidoDaoJdbc implements PedidoDao {
                 p.setTotal(rs.getBigDecimal("total"));
                 out.add(p);
             }
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return out;
     }
 
@@ -68,11 +74,10 @@ public class PedidoDaoJdbc implements PedidoDao {
     public List<PedidoDet> obtenerDetalles(long pedidoId) {
         String sql = "SELECT * FROM pedido_det WHERE pedido_id=? ORDER BY id";
         List<PedidoDet> out = new ArrayList<>();
-        try (Connection cn = com.ferre.config.DataSourceFactory.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
+        try (Connection cn = com.ferre.config.DataSourceFactory.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setLong(1, pedidoId);
-            try (ResultSet rs = ps.executeQuery()){
-                while (rs.next()){
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
                     PedidoDet d = new PedidoDet();
                     d.setId(rs.getLong("id"));
                     d.setPedidoId(rs.getLong("pedido_id"));
@@ -83,7 +88,9 @@ public class PedidoDaoJdbc implements PedidoDao {
                     out.add(d);
                 }
             }
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return out;
     }
 }

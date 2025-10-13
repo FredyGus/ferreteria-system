@@ -15,9 +15,12 @@ import java.util.function.Consumer;
 
 public class MainController {
 
-    @FXML private Menu menuAdmin, menuBodega, menuVentas, menuCaja, menuCatalogos;
-    @FXML private Label lblSesion;
-    @FXML private BorderPane content;
+    @FXML
+    private Menu menuAdmin, menuBodega, menuVentas, menuCaja, menuCatalogos;
+    @FXML
+    private Label lblSesion;
+    @FXML
+    private BorderPane content;
 
     @FXML
     public void initialize() {
@@ -32,28 +35,67 @@ public class MainController {
         menuCaja.setVisible(u.getRol() == Rol.CAJA || u.getRol() == Rol.ADMIN);
     }
 
-    @FXML private void exitApp() { System.exit(0); }
+    @FXML
+    private void exitApp() {
+        System.exit(0);
+    }
 
     @FXML
     private void logout() {
         Session.clear();
         try {
             Stage stage = (Stage) lblSesion.getScene().getWindow();
-            var loader = new FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
-            stage.setScene(new javafx.scene.Scene(loader.load(), 480, 360));
+
+            FXMLLoader loader = new FXMLLoader(
+                    com.ferre.app.FerreteriaApp.class.getResource("/fxml/LoginView.fxml")
+            );
+            javafx.scene.Parent root = loader.load();
+
+            javafx.scene.Scene scene = new javafx.scene.Scene(root, 480, 360);
+
+            // IMPORTANTE: agregar stylesheet (usa el mismo classloader que en start)
+            scene.getStylesheets().add(
+                    com.ferre.app.FerreteriaApp.class.getResource("/css/main.css").toExternalForm()
+            );
+
+            stage.setScene(scene);
             stage.setTitle("Ingreso — Ferretería");
             stage.setResizable(false);
+            // no hace falta stage.show() porque la ventana ya estaba visible
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    @FXML private void openUsuarios()      { loadCenter("/fxml/users/UsersView.fxml"); }
-    @FXML private void openProductos()     { loadCenter("/fxml/catalogos/ProductosView.fxml"); }
-    @FXML private void openProveedores()   { loadCenter("/fxml/catalogos/ProveedoresView.fxml"); }
-    @FXML private void openClientes()      { loadCenter("/fxml/catalogos/ClientesView.fxml"); }
-    @FXML private void openIngreso()       { loadCenter("/fxml/bodega/IngresoView.fxml"); }
-    @FXML private void openNuevoPedido()   { loadCenter("/fxml/ventas/NuevoPedidoView.fxml"); }
+    @FXML
+    private void openUsuarios() {
+        loadCenter("/fxml/users/UsersView.fxml");
+    }
+
+    @FXML
+    private void openProductos() {
+        loadCenter("/fxml/catalogos/ProductosView.fxml");
+    }
+
+    @FXML
+    private void openProveedores() {
+        loadCenter("/fxml/catalogos/ProveedoresView.fxml");
+    }
+
+    @FXML
+    private void openClientes() {
+        loadCenter("/fxml/catalogos/ClientesView.fxml");
+    }
+
+    @FXML
+    private void openIngreso() {
+        loadCenter("/fxml/bodega/IngresoView.fxml");
+    }
+
+    @FXML
+    private void openNuevoPedido() {
+        loadCenter("/fxml/ventas/NuevoPedidoView.fxml");
+    }
 
     @FXML
     private void openFacturar() {
@@ -63,9 +105,20 @@ public class MainController {
                 (FacturarController ctrl) -> ctrl.setMain(this));
     }
 
-    @FXML private void openRptVentas()     { loadCenter("/fxml/reportes/VentasReportView.fxml"); }
-    @FXML private void openRptStock()      { loadCenter("/fxml/reportes/StockReportView.fxml"); }
-    @FXML private void openRptKardex()     { loadCenter("/fxml/reportes/KardexReportView.fxml"); }
+    @FXML
+    private void openRptVentas() {
+        loadCenter("/fxml/reportes/VentasReportView.fxml");
+    }
+
+    @FXML
+    private void openRptStock() {
+        loadCenter("/fxml/reportes/StockReportView.fxml");
+    }
+
+    @FXML
+    private void openRptKardex() {
+        loadCenter("/fxml/reportes/KardexReportView.fxml");
+    }
 
     @FXML
     private void openCaja() {
@@ -73,15 +126,18 @@ public class MainController {
         loadCenter("/fxml/caja/CajaView.fxml");
     }
 
-    /** Abre Caja y le inyecta una factura (solo id es suficiente por ahora). */
+    /**
+     * Abre Caja y le inyecta una factura (solo id es suficiente por ahora).
+     */
     public void openCajaConFactura(Factura f) {
         loadCenter("/fxml/caja/CajaView.fxml",
                 (com.ferre.controller.caja.CajaController c) -> c.setFactura(f));
     }
 
     // ---------------- helpers de carga ----------------
-
-    /** Carga simple al centro del BorderPane. */
+    /**
+     * Carga simple al centro del BorderPane.
+     */
     private void loadCenter(String fxml) {
         try {
             Node node = FXMLLoader.load(getClass().getResource(fxml));
@@ -91,14 +147,18 @@ public class MainController {
         }
     }
 
-    /** Carga + callback con el controller para inicialización programática. */
+    /**
+     * Carga + callback con el controller para inicialización programática.
+     */
     private <T> void loadCenter(String fxml, Consumer<T> init) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
             Node node = loader.load();
             @SuppressWarnings("unchecked")
             T controller = (T) loader.getController();
-            if (init != null) init.accept(controller);
+            if (init != null) {
+                init.accept(controller);
+            }
             content.setCenter(node);
         } catch (Exception e) {
             throw new RuntimeException(e);

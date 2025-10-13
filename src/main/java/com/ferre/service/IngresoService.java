@@ -11,17 +11,19 @@ import java.sql.Connection;
 import java.util.List;
 
 public class IngresoService {
+
     private final IngresoDao dao = new IngresoDaoJdbc();
 
     public long registrar(Ingreso cab, List<IngresoDet> detalles) {
-        if (detalles==null || detalles.isEmpty())
+        if (detalles == null || detalles.isEmpty()) {
             throw new IllegalArgumentException("Debes agregar al menos un producto");
+        }
         BigDecimal total = detalles.stream()
                 .map(IngresoDet::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         cab.setTotal(total);
 
-        try (Connection cn = DataSourceFactory.getConnection()){
+        try (Connection cn = DataSourceFactory.getConnection()) {
             cn.setAutoCommit(false);
             try {
                 long id = dao.crearCabecera(cn, cab);
@@ -32,12 +34,14 @@ public class IngresoService {
                 }
                 cn.commit();
                 return id;
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 cn.rollback();
                 throw ex;
             } finally {
                 cn.setAutoCommit(true);
             }
-        } catch (Exception e){ throw new RuntimeException(e); }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

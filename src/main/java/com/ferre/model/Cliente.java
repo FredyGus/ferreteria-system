@@ -71,7 +71,7 @@ public class Cliente {
 
     @Override
     public String toString() {
-        String nombre = getNombre();        // usa tus getters
+        String nombre = getNombre();
         String nit = (getNit() != null && !getNit().isBlank()) ? " — " + getNit() : "";
         return (nombre != null ? nombre : "Cliente") + nit;
     }

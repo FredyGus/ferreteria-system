@@ -34,7 +34,7 @@ public class ReportService {
         JasperViewer v = new JasperViewer(print, false);
         v.setTitle(titulo);
         v.setAlwaysOnTop(true);
-        v.setLocationRelativeTo(null); // centrar
+        v.setLocationRelativeTo(null); 
         v.setVisible(true);
     }
 

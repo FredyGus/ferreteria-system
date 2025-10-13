@@ -34,12 +34,13 @@ public class UsuarioService {
 
     public Usuario findById(long id) {
         String sql = "SELECT id, nombre, usuario, rol, estado FROM usuarios WHERE id=?";
-        try (var cn = com.ferre.config.DataSourceFactory.getConnection();
-             var ps = cn.prepareStatement(sql)) {
+        try (var cn = com.ferre.config.DataSourceFactory.getConnection(); var ps = cn.prepareStatement(sql)) {
 
             ps.setLong(1, id);
             try (var rs = ps.executeQuery()) {
-                if (!rs.next()) return null;
+                if (!rs.next()) {
+                    return null;
+                }
 
                 var u = new Usuario();
                 u.setId(rs.getLong("id"));

@@ -21,10 +21,6 @@ public class FacturaService {
     private final FacturaDao fdao = new FacturaDaoJdbc();
     private final PedidoDao pdao = new PedidoDaoJdbc();
 
-    /**
-     * Crea la factura a partir de un pedido. Verifica stock y descuenta, pero
-     * NO registra pagos.
-     */
     public long facturar(long pedidoId, long cajeroId, String serie, String numero) {
         try (Connection cn = DataSourceFactory.getConnection()) {
             cn.setAutoCommit(false);
@@ -34,7 +30,6 @@ public class FacturaService {
                     throw new IllegalStateException("El pedido no tiene detalles.");
                 }
 
-                // Verificar stock con FOR UPDATE
                 for (PedidoDet d : dets) {
                     int stock = fdao.obtenerStockForUpdate(cn, d.getProductoId());
                     if (stock < d.getCantidad()) {
@@ -45,12 +40,10 @@ public class FacturaService {
                     }
                 }
 
-                // Total
                 BigDecimal total = dets.stream()
                         .map(PedidoDet::getSubtotal)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                // Crear factura
                 Factura f = new Factura();
                 f.setPedidoId(pedidoId);
                 f.setCajeroId(cajeroId);
@@ -61,29 +54,25 @@ public class FacturaService {
 
                 long facturaId = fdao.crearFactura(cn, f);
 
-                // Descontar stock
                 for (PedidoDet d : dets) {
                     fdao.disminuirStock(cn, d.getProductoId(), d.getCantidad());
                 }
 
-                // Cambiar estado del pedido
-                fdao.cambiarEstadoPedido(cn, pedidoId, "PAGADO"); // o 'FACTURADO' si prefieres otro estado
+                fdao.cambiarEstadoPedido(cn, pedidoId, "PAGADO");
 
                 cn.commit();
                 return facturaId;
             } catch (Exception ex) {
                 cn.rollback();
-                // Si es una IllegalStateException (como stock insuficiente), re-lanzamos limpio
                 if (ex instanceof IllegalStateException) {
                     throw (IllegalStateException) ex;
                 }
-                // Para el resto, mensaje claro
+
                 throw new RuntimeException("Error al facturar: " + ex.getMessage(), ex);
             } finally {
                 cn.setAutoCommit(true);
             }
         } catch (Exception e) {
-            // Se propaga ya limpio hacia el controller
             throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e.getMessage(), e);
         }
     }

@@ -14,27 +14,29 @@ import javafx.stage.Stage;
 
 public class LoginController {
 
-    @FXML private TextField txtUsuario;
-    @FXML private PasswordField txtPassword;
-    @FXML private Label lblError;
+    @FXML
+    private TextField txtUsuario;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private Label lblError;
 
     private final AuthService auth = new AuthService();
 
     @FXML
     private void doLogin(ActionEvent e) {
         lblError.setText("");
-        String u = txtUsuario.getText()==null?"":txtUsuario.getText().trim();
-        String p = txtPassword.getText()==null?"":txtPassword.getText().trim();
+        String u = txtUsuario.getText() == null ? "" : txtUsuario.getText().trim();
+        String p = txtPassword.getText() == null ? "" : txtPassword.getText().trim();
 
         if (u.isEmpty() || p.isEmpty()) {
             lblError.setText("Usuario y contraseña son requeridos");
             return;
         }
         try {
-            Usuario usr = auth.login(u,p);
+            Usuario usr = auth.login(u, p);
             Session.set(usr);
 
-            // Abrir el Main (dashboard)
             Stage stage = (Stage) txtUsuario.getScene().getWindow();
             FXMLLoader fx = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
             Scene scene = new Scene(fx.load(), 1024, 640);

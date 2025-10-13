@@ -1,5 +1,5 @@
 -- =========================================================
--- PROYECTO: Ferretería - Modelo de datos (F1’ limpio)
+-- PROYECTO: Ferretería - ARMAZÓN (estructura completa)
 -- MySQL 8/9 (InnoDB, utf8mb4). Fechas de movimientos como DATE.
 -- =========================================================
 
@@ -73,7 +73,7 @@ CREATE TABLE ingreso (
   id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   proveedor_id  BIGINT UNSIGNED NOT NULL,
   bodeguero_id  BIGINT UNSIGNED,
-  fecha         DATE NOT NULL,              -- <== DATE (no arrastre de TZ)
+  fecha         DATE NOT NULL,
   no_doc        VARCHAR(40),
   total         DECIMAL(14,2) NOT NULL DEFAULT 0.00,
   creado_en     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -110,7 +110,7 @@ CREATE TABLE pedido (
   id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   cliente_id    BIGINT UNSIGNED NOT NULL,
   vendedor_id   BIGINT UNSIGNED NOT NULL,
-  fecha         DATE NOT NULL,              -- <== DATE
+  fecha         DATE NOT NULL,
   estado        ENUM('PENDIENTE','PAGADO','CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
   observaciones VARCHAR(200),
   total         DECIMAL(14,2) NOT NULL DEFAULT 0.00,
@@ -149,7 +149,7 @@ CREATE TABLE factura (
   id        BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   pedido_id BIGINT UNSIGNED NOT NULL,
   cajero_id BIGINT UNSIGNED NOT NULL,
-  fecha     DATE NOT NULL,                 -- <== DATE
+  fecha     DATE NOT NULL,
   serie     VARCHAR(10),
   numero    VARCHAR(20),
   total     DECIMAL(14,2) NOT NULL,
@@ -187,7 +187,45 @@ CREATE TABLE pago (
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
--- ============ 3) VISTAS ============
+-- ============ 3) CAJA ============
+
+DROP TABLE IF EXISTS caja_mov;
+DROP TABLE IF EXISTS caja_sesion;
+
+CREATE TABLE IF NOT EXISTS caja_sesion (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  usuario_id    BIGINT UNSIGNED NOT NULL,
+  apertura      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  cierre        TIMESTAMP NULL,
+  monto_inicio  DECIMAL(14,2) NOT NULL,
+  monto_fin     DECIMAL(14,2) NULL,
+  estado        ENUM('ABIERTA','CERRADA') NOT NULL DEFAULT 'ABIERTA',
+  observaciones VARCHAR(200),
+  KEY idx_caja_sesion_usuario (usuario_id),
+  KEY idx_caja_sesion_estado (estado),
+  CONSTRAINT fk_caja_sesion_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS caja_mov (
+  id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sesion_id      BIGINT UNSIGNED NOT NULL,
+  creado_en      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  tipo           ENUM('VENTA','INGRESO','EGRESO') NOT NULL,
+  descripcion    VARCHAR(200),
+  monto          DECIMAL(14,2) NOT NULL,
+  factura_id     BIGINT UNSIGNED NULL,
+  forma_pago_id  BIGINT UNSIGNED NULL,
+  pago_id        BIGINT UNSIGNED NULL,
+  KEY idx_caja_mov_sesion (sesion_id),
+  KEY idx_caja_mov_tipo (tipo),
+  CONSTRAINT fk_caja_mov_sesion
+    FOREIGN KEY (sesion_id) REFERENCES caja_sesion(id)
+    ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ============ 4) VISTAS ============
 
 DROP VIEW IF EXISTS v_stock;
 CREATE VIEW v_stock AS
@@ -202,27 +240,19 @@ FROM factura f
 GROUP BY f.fecha
 ORDER BY dia;
 
--- ============ 4) SEMILLA ============
-
-INSERT INTO forma_pago (nombre) VALUES ('Efectivo'), ('Tarjeta'), ('Cheque'), ('Otro')
-ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
-
-INSERT INTO usuarios (nombre, usuario, pass_hash, rol, estado) VALUES
-  ('Administrador', 'admin',  SHA2('admin',256),  'ADMIN',  1),
-  ('Bodeguero Demo','bodega', SHA2('bodega',256), 'BODEGA', 1),
-  ('Vendedor Demo', 'ventas', SHA2('ventas',256), 'VENTAS', 1),
-  ('Cajero Demo',   'caja',   SHA2('caja',256),   'CAJA',   1)
-ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
-
-INSERT INTO proveedores (nombre, nit, telefono, direccion) VALUES
-  ('Acero S.A.',   'CF', '5551-0001', 'Zona 1'),
-  ('Pinturas XYZ', 'CF', '5551-0002', 'Zona 2');
-
-INSERT INTO productos (codigo, nombre, unidad, precio, proveedor_id, activo) VALUES
-  ('CLV-2"',  'Clavo 2 pulgadas', 'pz',  0.50, 1, 1),
-  ('TAL-500', 'Taladro 500W',      'pz', 550.00, 1, 1),
-  ('PIN-ROJA','Pintura Roja 1L',   'lt',  70.00, 2, 1);
-
-INSERT INTO clientes (nombre, nit, telefono, direccion) VALUES
-  ('Consumidor Final', 'CF', NULL, NULL),
-  ('Cliente Demo',     '1234567-8', '5555-1234', 'Zona 3');
+CREATE OR REPLACE VIEW v_caja_resumen AS
+SELECT s.id,
+       s.usuario_id,
+       s.apertura,
+       s.cierre,
+       s.monto_inicio,
+       s.monto_fin,
+       s.estado,
+       SUM(CASE WHEN m.tipo IN ('VENTA','INGRESO') THEN m.monto ELSE 0 END) AS ingresos,
+       SUM(CASE WHEN m.tipo = 'EGRESO' THEN m.monto ELSE 0 END)             AS egresos,
+       s.monto_inicio
+         + SUM(CASE WHEN m.tipo IN ('VENTA','INGRESO') THEN m.monto ELSE 0 END)
+         + SUM(CASE WHEN m.tipo = 'EGRESO' THEN -m.monto ELSE 0 END)        AS saldo_estimado
+FROM caja_sesion s
+LEFT JOIN caja_mov m ON m.sesion_id = s.id
+GROUP BY s.id;

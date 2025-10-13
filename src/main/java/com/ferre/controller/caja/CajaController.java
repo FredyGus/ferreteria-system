@@ -30,15 +30,12 @@ public class CajaController {
     @FXML
     private TextField txtEfectivo;
 
-    private Factura factura;               // la factura actual (al abrir desde Facturar)
+    private Factura factura;
     private BigDecimal total = BigDecimal.ZERO;
     private java.math.BigDecimal totalFactura = java.math.BigDecimal.ZERO;
 
     private final ReportService reportService = new ReportService();
 
-    /**
-     * Lo llama MainController cuando abre Caja con una factura
-     */
     public void setFactura(Factura f) {
         this.factura = f;
         if (f != null && f.getId() > 0) {
@@ -84,7 +81,6 @@ public class CajaController {
 
             info("Cobro realizado", "Total: " + total + "\nEfectivo: " + efectivo + "\nCambio: " + cambio);
 
-            // Al finalizar el cobro, imprimimos/mostramos el recibo
             imprimirRecibo(factura.getId());
 
         } catch (NumberFormatException nfe) {
@@ -100,17 +96,15 @@ public class CajaController {
             String cliente = lblCliente.getText() == null ? "-" : lblCliente.getText().trim();
             String vendedor = lblVendedor.getText() == null ? "-" : lblVendedor.getText().trim();
 
-            // Usa el campo de la clase que setéas en cargarFacturaDesdeBD(...)
             java.math.BigDecimal tot = (this.total == null) ? java.math.BigDecimal.ZERO : this.total;
 
             java.util.Map<String, Object> params = new java.util.HashMap<>();
-            params.put("P_FACTURA_ID", facturaId); // para el detalle
+            params.put("P_FACTURA_ID", facturaId);
             params.put("P_FACTURA", facStr);
             params.put("P_CLIENTE", cliente);
             params.put("P_VENDEDOR", vendedor);
             params.put("P_TOTAL", tot);
 
-            // Usa la misma instancia que tengas (rs o reportService). Ejemplo con 'rs':
             var print = reportService.fill("/reports/recibo_factura.jrxml", params);
             reportService.view(print, "Recibo — " + facStr);
 
@@ -169,26 +163,22 @@ public class CajaController {
                     String cliente = rs.getString("cliente");
                     String vend = rs.getString("vendedor");
 
-                    // Encabezado factura
                     String facText = (serie != null && numero != null)
                             ? (serie + "-" + numero)
                             : ("#" + facturaId);
                     lblFactura.setText(facText);
 
-                    // Cliente / Vendedor / Total
                     lblCliente.setText(cliente != null ? cliente : "-");
                     lblVendedor.setText(vend != null ? vend : "-");
 
                     total = (tot != null) ? tot : java.math.BigDecimal.ZERO;
                     lblTotal.setText(total.toPlainString());
 
-                    // Reset de cambio y caja
                     lblCambio.setText("0.00");
                     txtEfectivo.clear();
                 }
             }
         } catch (Exception ex) {
-            // Si falla, deja algo visible y no rompas la UI
             lblFactura.setText("#" + facturaId);
             lblCliente.setText("-");
             lblVendedor.setText("-");

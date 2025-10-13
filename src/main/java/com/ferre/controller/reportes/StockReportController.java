@@ -6,8 +6,11 @@ import javafx.fxml.FXML;
 import java.util.HashMap;
 
 public class StockReportController {
+
     private final ReportService rs = new ReportService();
-    @FXML private void ver() {
+
+    @FXML
+    private void ver() {
         var print = rs.fill("/reports/stock_actual.jrxml", new HashMap<>());
         rs.view(print, "Inventario / Stock");
     }
