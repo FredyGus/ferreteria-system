@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="recibo_factura"
+              pageWidth="595" pageHeight="842"
+              columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+
+    <!-- Parámetro -->
+    <parameter name="P_FACTURA_ID" class="java.lang.Long"/>
+
+    <!-- Consulta (detalle de líneas) -->
+    <queryString>
+        <![CDATA[
+SELECT
+  f.id            AS factura_id,
+  f.serie         AS serie,
+  f.numero        AS numero,
+  f.fecha         AS fecha,
+  f.total         AS total_factura,
+  c.nombre        AS cliente,
+  u.nombre        AS vendedor,
+  pr.codigo       AS prod_codigo,
+  pr.nombre       AS prod_nombre,
+  d.cantidad      AS cantidad,
+  d.precio_unit   AS precio_unit,
+  d.subtotal      AS subtotal
+FROM factura f
+JOIN pedido p       ON p.id = f.pedido_id
+JOIN clientes c     ON c.id = p.cliente_id
+JOIN usuarios u     ON u.id = p.vendedor_id
+JOIN pedido_det d   ON d.pedido_id = p.id
+JOIN productos pr   ON pr.id = d.producto_id
+WHERE f.id = $P{P_FACTURA_ID}
+ORDER BY pr.nombre
+        ]]>
+    </queryString>
+
+    <!-- Campos -->
+    <field name="factura_id"   class="java.lang.Long"/>
+    <field name="serie"        class="java.lang.String"/>
+    <field name="numero"       class="java.lang.String"/>
+    <field name="fecha"        class="java.sql.Timestamp"/>
+    <field name="total_factura" class="java.math.BigDecimal"/>
+    <field name="cliente"      class="java.lang.String"/>
+    <field name="vendedor"     class="java.lang.String"/>
+    <field name="prod_codigo"  class="java.lang.String"/>
+    <field name="prod_nombre"  class="java.lang.String"/>
+    <field name="cantidad"     class="java.lang.Integer"/>
+    <field name="precio_unit"  class="java.math.BigDecimal"/>
+    <field name="subtotal"     class="java.math.BigDecimal"/>
+
+    <!-- Título -->
+    <title>
+        <band height="70">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="24"/>
+                <textElement textAlignment="Center">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[RECIBO DE VENTA]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="26" width="555" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[
+"Factura: " + $F{serie} + "-" + $F{numero} +
+"    |    Fecha: " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format($F{fecha})
+                ]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="46" width="555" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[
+"Cliente: " + $F{cliente} + "    |    Vendedor: " + $F{vendedor}
+                ]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- Cabecera columnas -->
+    <columnHeader>
+        <band height="18">
+            <staticText><reportElement x="0"   y="0" width="80"  height="18"/><text><![CDATA[Código]]></text></staticText>
+            <staticText><reportElement x="80"  y="0" width="250" height="18"/><text><![CDATA[Producto]]></text></staticText>
+            <staticText><reportElement x="330" y="0" width="60"  height="18"/><text><![CDATA[Cant.]]></text></staticText>
+            <staticText><reportElement x="390" y="0" width="80"  height="18"/><text><![CDATA[Precio]]></text></staticText>
+            <staticText><reportElement x="470" y="0" width="85"  height="18"/><text><![CDATA[Subtotal]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <!-- Detalle -->
+    <detail>
+        <band height="18">
+            <textField><reportElement x="0"   y="0" width="80"  height="18"/>
+                <textFieldExpression><![CDATA[$F{prod_codigo}]]></textFieldExpression>
+            </textField>
+            <textField><reportElement x="80"  y="0" width="250" height="18"/>
+                <textFieldExpression><![CDATA[$F{prod_nombre}]]></textFieldExpression>
+            </textField>
+            <textField><reportElement x="330" y="0" width="60"  height="18">
+                <textElement textAlignment="Right"/>
+            </reportElement>
+                <textFieldExpression><![CDATA[$F{cantidad}.toString()]]></textFieldExpression>
+            </textField>
+            <textField><reportElement x="390" y="0" width="80"  height="18">
+                <textElement textAlignment="Right"/>
+            </reportElement>
+                <textFieldExpression><![CDATA[
+new java.text.DecimalFormat("#,##0.00").format($F{precio_unit})
+                ]]></textFieldExpression>
+            </textField>
+            <textField><reportElement x="470" y="0" width="85"  height="18">
+                <textElement textAlignment="Right"/>
+            </reportElement>
+                <textFieldExpression><![CDATA[
+new java.text.DecimalFormat("#,##0.00").format($F{subtotal})
+                ]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <!-- Pie con total -->
+    <columnFooter>
+        <band height="30">
+            <staticText>
+                <reportElement x="350" y="6" width="120" height="18"/>
+                <textElement textAlignment="Right" />
+                <text><![CDATA[TOTAL:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="470" y="6" width="85" height="18">
+                    <textElement textAlignment="Right"/>
+                </reportElement>
+                <textFieldExpression><![CDATA[
+new java.text.DecimalFormat("#,##0.00").format($F{total_factura})
+                ]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnFooter>
+
+</jasperReport>
